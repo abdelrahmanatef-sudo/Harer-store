@@ -1,0 +1,756 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>حرير ستور</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap">
+
+<style>
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Layout: RTL single-column landing → product grid → CTA
+   Color:  cyan glow + silver + off-white; dark = near-black with cyan pop
+   Type:   Cairo (display) + Tajawal (body)
+   Sig:    glowing cyan ring logo treatment echoing the actual logo mark
+*/
+:root {
+  --cyan:       #00D4E8;
+  --cyan-dim:   #00b8c8;
+  --cyan-glow:  rgba(0,212,232,.18);
+  --silver:     #C0C8D0;
+  --silver-dim: #9aa5b0;
+  --bg:         #F5F7FA;
+  --bg-card:    #FFFFFF;
+  --fg:         #2e3340;
+  --fg-muted:   #6b7585;
+  --border:     #e0e6ee;
+  --shadow:     0 2px 16px rgba(0,0,0,.07);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #0d1117;
+    --bg-card:   #161b24;
+    --fg:        #e8edf5;
+    --fg-muted:  #8892a4;
+    --border:    #252d3a;
+    --shadow:    0 2px 20px rgba(0,0,0,.4);
+    --cyan-glow: rgba(0,212,232,.12);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #0d1117;
+  --bg-card:   #161b24;
+  --fg:        #e8edf5;
+  --fg-muted:  #8892a4;
+  --border:    #252d3a;
+  --shadow:    0 2px 20px rgba(0,0,0,.4);
+  --cyan-glow: rgba(0,212,232,.12);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'Tajawal', 'Cairo', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  direction: rtl;
+  padding-inline: 0;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 100;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: .9rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.nav-logo {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--cyan);
+  letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+.nav-logo span { color: var(--fg); }
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--fg-muted);
+  text-decoration: none;
+  font-size: .9rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--cyan); }
+.nav-cart {
+  position: relative;
+  background: none;
+  border: 1.5px solid var(--cyan);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--cyan);
+  font-size: 1.1rem;
+  transition: background .2s;
+}
+.nav-cart:hover { background: var(--cyan-glow); }
+.cart-badge {
+  position: absolute;
+  top: -4px; left: -4px;
+  background: var(--cyan);
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+}
+
+/* ── HERO ──────────────────────────────────────────────────────────────────*/
+.hero {
+  padding: 4rem 1.5rem 3.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block;
+  background: var(--cyan-glow);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-size: .78rem;
+  font-weight: 700;
+  padding: .3rem .9rem;
+  border-radius: 99px;
+  letter-spacing: .08em;
+  margin-bottom: 1.2rem;
+}
+.hero h1 {
+  font-family: 'Cairo', sans-serif;
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  font-weight: 900;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin-bottom: .8rem;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--cyan);
+}
+.hero p {
+  color: var(--fg-muted);
+  font-size: 1.05rem;
+  max-width: 480px;
+  margin: 0 auto 2rem;
+}
+.hero-ctas {
+  display: flex;
+  gap: .8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  background: var(--cyan);
+  color: #0d1117;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: .95rem;
+  padding: .7rem 1.8rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  color: var(--fg);
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  padding: .7rem 1.8rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color .2s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── STATS BAR ─────────────────────────────────────────────────────────────*/
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem 3rem;
+  padding: 1.8rem 1.5rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.stat-label { font-size: .8rem; color: var(--fg-muted); margin-top: .2rem; }
+
+/* ── SECTION ───────────────────────────────────────────────────────────────*/
+.section { padding: 3rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+.section-header { margin-bottom: 2rem; }
+.section-eyebrow {
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+}
+.section-title {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  text-wrap: balance;
+  line-height: 1.25;
+}
+
+/* ── CATEGORIES ────────────────────────────────────────────────────────────*/
+.cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+.cat-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+}
+.cat-card:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-glow);
+  transform: translateY(-2px);
+}
+.cat-icon { font-size: 2rem; margin-bottom: .5rem; }
+.cat-name { font-weight: 700; font-size: .9rem; }
+.cat-count { font-size: .75rem; color: var(--fg-muted); }
+
+/* ── PRODUCTS ──────────────────────────────────────────────────────────────*/
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
+}
+.product-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
+  display: flex;
+  flex-direction: column;
+}
+.product-card:hover {
+  box-shadow: 0 6px 28px var(--cyan-glow), var(--shadow);
+  transform: translateY(-3px);
+}
+.product-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  padding: 1rem;
+  position: relative;
+}
+.product-badge {
+  position: absolute;
+  top: .6rem;
+  right: .6rem;
+  background: var(--cyan);
+  color: #0d1117;
+  font-size: .65rem;
+  font-weight: 800;
+  padding: .2rem .55rem;
+  border-radius: 6px;
+  letter-spacing: .04em;
+}
+.product-body { padding: .9rem 1rem 1rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
+.product-brand { font-size: .72rem; color: var(--cyan); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.product-name { font-weight: 700; font-size: .95rem; line-height: 1.35; }
+.product-compat { font-size: .75rem; color: var(--fg-muted); }
+.product-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: .5rem; }
+.product-price {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.product-price span { font-size: .72rem; font-weight: 400; color: var(--fg-muted); }
+.product-old { font-size: .78rem; color: var(--fg-muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.btn-add {
+  background: var(--cyan);
+  color: #0d1117;
+  border: none;
+  border-radius: 7px;
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: 'Cairo', sans-serif;
+  padding: .45rem .9rem;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-add:hover { opacity: .85; }
+
+/* ── FEATURES ──────────────────────────────────────────────────────────────*/
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+.feature-card {
+  display: flex;
+  gap: .9rem;
+  align-items: flex-start;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+}
+.feature-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.feature-title { font-weight: 700; font-size: .9rem; margin-bottom: .2rem; }
+.feature-desc { font-size: .8rem; color: var(--fg-muted); }
+
+/* ── CTA BANNER ────────────────────────────────────────────────────────────*/
+.cta-banner {
+  background: linear-gradient(135deg, #0d3a40 0%, #0a2a30 100%);
+  border: 1px solid var(--cyan);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  margin: 1rem 1.5rem 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.cta-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,212,232,.15) 0%, transparent 65%);
+}
+.cta-banner h2 {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  color: #fff;
+  margin-bottom: .5rem;
+  position: relative;
+}
+.cta-banner p { color: #9fd8e0; margin-bottom: 1.4rem; font-size: .95rem; position: relative; }
+.cta-banner .btn-primary { position: relative; }
+
+/* ── FOOTER ────────────────────────────────────────────────────────────────*/
+footer {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  padding: 2rem 1.5rem 1.5rem;
+}
+.footer-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+.footer-brand-name {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: var(--cyan);
+  margin-bottom: .4rem;
+}
+.footer-desc { font-size: .82rem; color: var(--fg-muted); line-height: 1.6; }
+.footer-col-title { font-weight: 700; font-size: .88rem; margin-bottom: .7rem; }
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+.footer-links a { color: var(--fg-muted); text-decoration: none; font-size: .82rem; transition: color .2s; }
+.footer-links a:hover { color: var(--cyan); }
+.footer-bottom {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── CART DRAWER ───────────────────────────────────────────────────────────*/
+.cart-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+.cart-drawer {
+  position: fixed;
+  top: 0; left: 0;
+  width: min(360px, 92vw);
+  height: 100%;
+  background: var(--bg-card);
+  z-index: 210;
+  transform: translateX(-100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+}
+.cart-drawer.open { transform: translateX(0); }
+.cart-drawer-head {
+  padding: 1.2rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cart-drawer-title { font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.cart-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--fg-muted); }
+.cart-items { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .8rem; }
+.cart-empty { text-align: center; color: var(--fg-muted); padding: 2rem 0; font-size: .9rem; }
+.cart-item {
+  display: flex; gap: .8rem; align-items: center;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: .7rem;
+}
+.cart-item-icon { font-size: 1.8rem; flex-shrink: 0; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name { font-weight: 600; font-size: .85rem; }
+.cart-item-price { font-size: .8rem; color: var(--cyan); font-weight: 700; font-variant-numeric: tabular-nums; }
+.cart-item-remove { background: none; border: none; color: var(--fg-muted); cursor: pointer; font-size: .9rem; }
+.cart-footer {
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--border);
+}
+.cart-total {
+  display: flex; justify-content: space-between;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  margin-bottom: .9rem;
+  font-variant-numeric: tabular-nums;
+}
+.cart-total-num { color: var(--cyan); font-size: 1.1rem; }
+</style>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚡ <span>حرير</span></div>
+  <ul class="nav-links">
+    <li><a href="#products">المنتجات</a></li>
+    <li><a href="#categories">التصنيفات</a></li>
+    <li><a href="#features">لماذا حرير</a></li>
+  </ul>
+  <button class="nav-cart" id="cartBtn" aria-label="سلة المشتريات">
+    🛒
+    <span class="cart-badge" id="cartCount" hidden>0</span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🇪🇬 منتجات أصلية 100%</div>
+  <h1>اكسسوارات موبايلك <em>الأصلية</em><br>في مكان واحد</h1>
+  <p>شواحن وكابلات أصلية لـ iPhone وSamsung — Anker، ثري تك، Apple وأكتر</p>
+  <div class="hero-ctas">
+    <a href="#products" class="btn-primary">تسوق دلوقتي</a>
+    <a href="#categories" class="btn-outline">استكشف التصنيفات</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">+500</div><div class="stat-label">منتج أصلي</div></div>
+  <div class="stat"><div class="stat-num">+12K</div><div class="stat-label">عميل سعيد</div></div>
+  <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">تقييم العملاء</div></div>
+  <div class="stat"><div class="stat-num">14</div><div class="stat-label">يوم استرجاع</div></div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="section" id="categories">
+  <div class="section-header">
+    <div class="section-eyebrow">التصنيفات</div>
+    <div class="section-title">إيه اللي بتدور عليه؟</div>
+  </div>
+  <div class="cats">
+    <div class="cat-card" onclick="filterCat('charger')">
+      <div class="cat-icon">🔌</div>
+      <div class="cat-name">شواحن</div>
+      <div class="cat-count">+80 منتج</div>
+    </div>
+    <div class="cat-card" onclick="filterCat('cable')">
+      <div class="cat-icon">🔗</div>
+      <div class="cat-name">كابلات</div>
+      <div class="cat-count">+120 منتج</div>
+    </div>
+    <div class="cat-card" onclick="filterCat('earbuds')">
+      <div class="cat-icon">🎧</div>
+      <div class="cat-name">سماعات</div>
+      <div class="cat-count">+40 منتج</div>
+    </div>
+    <div class="cat-card" onclick="filterCat('case')">
+      <div class="cat-icon">📱</div>
+      <div class="cat-name">حافظات</div>
+      <div class="cat-count">+200 منتج</div>
+    </div>
+    <div class="cat-card" onclick="filterCat('all')">
+      <div class="cat-icon">✨</div>
+      <div class="cat-name">كل المنتجات</div>
+      <div class="cat-count">+500 منتج</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="section" id="products">
+  <div class="section-header">
+    <div class="section-eyebrow">الأكثر مبيعاً</div>
+    <div class="section-title">منتجات مميزة</div>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-header">
+    <div class="section-eyebrow">لماذا حرير</div>
+    <div class="section-title">بنفرق عن غيرنا</div>
+  </div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">✅</div>
+      <div><div class="feature-title">أصلي 100%</div><div class="feature-desc">كل المنتجات مضمونة الأصالة مع ضمان الشركة</div></div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <div><div class="feature-title">توصيل سريع</div><div class="feature-desc">٢-٥ أيام عمل لجميع محافظات مصر</div></div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <div><div class="feature-title">استرجاع مضمون</div><div class="feature-desc">١٤ يوم استرجاع بدون أسئلة</div></div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <div><div class="feature-title">دعم فوري</div><div class="feature-desc">تواصل معنا على واتساب في أي وقت</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <h2>محتاج مساعدة في الاختيار؟</h2>
+  <p>شات بوتنا بيساعدك تلاقي المنتج المناسب لجهازك في ثوان</p>
+  <a href="https://wa.me/201121414149" class="btn-primary" target="_blank" rel="noopener">تكلم معنا على واتساب</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand-name">⚡ حرير</div>
+      <div class="footer-desc">متجرك الأول لاكسسوارات الموبايل الأصلية في مصر</div>
+    </div>
+    <div>
+      <div class="footer-col-title">المنتجات</div>
+      <ul class="footer-links">
+        <li><a href="#">شواحن Anker</a></li>
+        <li><a href="#">كابلات Apple</a></li>
+        <li><a href="#">سماعات Samsung</a></li>
+        <li><a href="#">ثري تك</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">خدمة العملاء</div>
+      <ul class="footer-links">
+        <li><a href="#">سياسة الاسترجاع</a></li>
+        <li><a href="#">الشحن والتوصيل</a></li>
+        <li><a href="#">الأسئلة الشائعة</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">تواصل معنا</div>
+      <ul class="footer-links">
+        <li><a href="#">0112 141 4149</a></li>
+        <li><a href="#">info@harir.eg</a></li>
+        <li><a href="#">الجيزة، مصر</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 حرير. جميع الحقوق محفوظة.</div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-head">
+    <span class="cart-drawer-title">🛒 سلة المشتريات</span>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty">السلة فارغة<br>ابدأ التسوق! ⚡</div>
+  </div>
+  <div class="cart-footer" id="cartFooter" hidden>
+    <div class="cart-total">
+      <span>الإجمالي</span>
+      <span class="cart-total-num" id="cartTotal">0 ج.م</span>
+    </div>
+    <button class="btn-primary" style="width:100%;font-size:1rem;padding:.8rem">إتمام الطلب</button>
+  </div>
+</div>
+
+<script>
+const products = [
+  { id:1, cat:'charger', icon:'⚡', brand:'Anker', name:'شاحن Nano II 65W', compat:'iPhone / Samsung / لاب توب', price:450, old:580, badge:'الأكثر مبيعاً' },
+  { id:2, cat:'charger', icon:'🔋', brand:'Apple', name:'شاحن 20W أصلي', compat:'iPhone 12 وما بعده', price:299, old:null, badge:'أصلي' },
+  { id:3, cat:'charger', icon:'⚡', brand:'Samsung', name:'شاحن Super Fast 25W', compat:'Samsung Galaxy', price:249, old:320, badge:null },
+  { id:4, cat:'charger', icon:'🌀', brand:'Anker', name:'شاحن لاسلكي MagSafe 15W', compat:'iPhone 12+', price:399, old:null, badge:'جديد' },
+  { id:5, cat:'cable',   icon:'🔗', brand:'Anker', name:'كابل USB-C to Lightning 1m', compat:'iPhone MFi أصلي', price:149, old:200, badge:'أصلي' },
+  { id:6, cat:'cable',   icon:'🔗', brand:'Apple', name:'كابل USB-C to Lightning', compat:'iPhone أصلي Apple', price:199, old:null, badge:'أصلي' },
+  { id:7, cat:'cable',   icon:'🔗', brand:'3T',    name:'كابل Braided 2m 100W', compat:'الكل', price:99, old:140, badge:null },
+  { id:8, cat:'earbuds', icon:'🎧', brand:'Apple', name:'AirPods Pro 2', compat:'iPhone', price:3500, old:null, badge:'أصلي' },
+  { id:9, cat:'earbuds', icon:'🎧', brand:'Samsung', name:'Galaxy Buds 2 Pro', compat:'Samsung', price:2800, old:3200, badge:'أصلي' },
+  { id:10,cat:'case',    icon:'📱', brand:'Anker', name:'حافظة MagSafe Clear', compat:'iPhone 15', price:299, old:null, badge:null },
+  { id:11,cat:'case',    icon:'📱', brand:'Samsung', name:'حافظة Silicone Original', compat:'Galaxy S24', price:199, old:260, badge:'أصلي' },
+  { id:12,cat:'charger', icon:'⚡', brand:'3T',    name:'شاحن GaN 4 منافذ 100W', compat:'الكل', price:650, old:800, badge:'قوي' },
+];
+
+let cart = [];
+let activeFilter = 'all';
+
+function filterCat(cat) {
+  activeFilter = cat;
+  renderProducts();
+}
+
+function renderProducts() {
+  const grid = document.getElementById('productsGrid');
+  const filtered = activeFilter === 'all' ? products : products.filter(p => p.cat === activeFilter);
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card">
+      <div class="product-img">
+        ${p.icon}
+        ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
+      </div>
+      <div class="product-body">
+        <div class="product-brand">${p.brand}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-compat">${p.compat}</div>
+        <div class="product-footer">
+          <div>
+            <div class="product-price">${p.price.toLocaleString('ar-EG')} <span>ج.م</span></div>
+            ${p.old ? `<div class="product-old">${p.old.toLocaleString('ar-EG')} ج.م</div>` : ''}
+          </div>
+          <button class="btn-add" onclick="addToCart(${p.id})">+ سلة</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToCart(id) {
+  const p = products.find(x => x.id === id);
+  const existing = cart.find(x => x.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({...p, qty:1}); }
+  updateCartUI();
+  openCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const count = cart.reduce((s,x) => s + x.qty, 0);
+  const total = cart.reduce((s,x) => s + x.price * x.qty, 0);
+  const badge = document.getElementById('cartCount');
+  badge.hidden = count === 0;
+  badge.textContent = count;
+  document.getElementById('cartTotal').textContent = total.toLocaleString('ar-EG') + ' ج.م';
+  document.getElementById('cartFooter').hidden = cart.length === 0;
+  const items = document.getElementById('cartItems');
+  if (cart.length === 0) {
+    items.innerHTML = '<div class="cart-empty">السلة فارغة<br>ابدأ التسوق! ⚡</div>';
+  } else {
+    items.innerHTML = cart.map(x => `
+      <div class="cart-item">
+        <div class="cart-item-icon">${x.icon}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${x.brand} — ${x.name}</div>
+          <div class="cart-item-price">${(x.price * x.qty).toLocaleString('ar-EG')} ج.م × ${x.qty}</div>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart(${x.id})">🗑</button>
+      </div>
+    `).join('');
+  }
+}
+
+function openCart() {
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+}
+function closeCart() {
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+}
+document.getElementById('cartBtn').addEventListener('click', openCart);
+
+renderProducts();
+</script>
+
+</body></html>
