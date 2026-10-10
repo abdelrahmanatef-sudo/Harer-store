@@ -286,7 +286,13 @@ tr:hover td{background:var(--bg)}
     </div>
     <div class="form-group">
       <label>كلمة المرور</label>
-      <input type="password" id="loginPass" placeholder="••••••••">
+      <div style="position:relative">
+        <input type="password" id="loginPass" placeholder="••••••••" style="padding-left:40px;width:100%">
+        <button type="button" id="togglePass" onclick="togglePassword()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#8896a8;font-size:18px;line-height:1;display:flex;align-items:center" title="إظهار/إخفاء كلمة المرور">
+          <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eyeOffIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
     <button class="login-btn" id="loginBtn">دخول</button>
     <div class="err" id="loginErr"></div>
@@ -441,6 +447,24 @@ tr:hover td{background:var(--bg)}
 const SUPABASE_URL = 'https://ojocqktlpegfksfmoens.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_p5nQEl0c9UB5NZaJf5Didw_HfGWm_bO';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════
+// 👁  PASSWORD TOGGLE
+// ════════════════════════════════
+function togglePassword(){
+  const inp = document.getElementById('loginPass');
+  const eyeOn  = document.getElementById('eyeIcon');
+  const eyeOff = document.getElementById('eyeOffIcon');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    eyeOn.style.display  = 'none';
+    eyeOff.style.display = 'block';
+  } else {
+    inp.type = 'password';
+    eyeOn.style.display  = 'block';
+    eyeOff.style.display = 'none';
+  }
+}
 
 // ════════════════════════════════
 // 🔑  AUTH
