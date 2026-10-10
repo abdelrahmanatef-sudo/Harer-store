@@ -31,20 +31,24 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 }
 .logo-wrap{display:flex;align-items:center;gap:10px}
 .logo-icon{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(135deg,var(--cyan),var(--cyan-dk));
+  width:40px;height:40px;border-radius:11px;
+  background:linear-gradient(135deg,var(--cyan) 0%,#0099aa 100%);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,212,232,.35);
+  font-size:19px;flex-shrink:0;
+  box-shadow:0 4px 16px rgba(0,212,232,.4);
 }
-.logo-text{
+.logo-text{line-height:1}
+.logo-text .logo-ar{
   font-family:'Cairo',sans-serif;
   font-size:22px;font-weight:900;
-  color:var(--cyan);letter-spacing:-1px;line-height:1;
+  background:linear-gradient(135deg,var(--cyan),#7feef7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:3px;display:block;
 }
 .logo-text span{
-  color:rgba(255,255,255,.5);font-size:11px;font-weight:400;
-  display:block;margin-top:1px;letter-spacing:0;
+  color:rgba(255,255,255,.45);font-size:10px;font-weight:500;
+  display:block;margin-top:2px;letter-spacing:2px;
 }
 .sidebar-logo span{display:block;font-size:11px;color:rgba(255,255,255,.5);font-weight:400;margin-top:2px}
 .nav-item{
@@ -189,9 +193,9 @@ tr:hover td{background:var(--bg)}
 <!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#00D4E8,#00b8c9);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(0,212,232,.35)">⚡</div>
-      <div style="font-family:'Cairo',sans-serif;font-size:28px;font-weight:900;color:#00D4E8;letter-spacing:-1px">حرير</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px">
+      <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#00D4E8,#0099aa);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 20px rgba(0,212,232,.4)">⚡</div>
+      <div style="font-family:'Cairo',sans-serif;font-size:30px;font-weight:900;background:linear-gradient(135deg,#00D4E8,#0099aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:4px">حَرِيْر</div>
     </div>
     <p>لوحة الإدارة — تسجيل الدخول</p>
     <div class="form-group">
@@ -213,7 +217,10 @@ tr:hover td{background:var(--bg)}
     <div class="sidebar-logo">
       <div class="logo-wrap">
         <div class="logo-icon">⚡</div>
-        <div class="logo-text">حرير<span>Admin Panel</span></div>
+        <div class="logo-text">
+          <span class="logo-ar">حَرِيْر</span>
+          <span>Admin Panel</span>
+        </div>
       </div>
     </div>
     <div class="nav-item active" data-tab="dashboard">📊 الرئيسية</div>
