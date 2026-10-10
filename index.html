@@ -556,15 +556,16 @@ footer{
         </div>
       </div>
       <div class="form-group">
-        <label>المحافظة</label>
-        <select id="cCity">
+        <label id="govLbl">المحافظة</label>
+        <select id="cCity" onchange="onGovChange()">
           <option value="">اختر محافظتك</option>
-          <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
-          <option>الدقهلية</option><option>البحيرة</option><option>الشرقية</option>
-          <option>المنوفية</option><option>الغربية</option><option>الفيوم</option>
-          <option>بني سويف</option><option>المنيا</option><option>أسيوط</option>
-          <option>سوهاج</option><option>قنا</option><option>الأقصر</option>
-          <option>أسوان</option><option>البحر الأحمر</option><option>سيناء</option>
+          <option value="الجيزة">الجيزة</option>
+        </select>
+      </div>
+      <div class="form-group" id="districtGroup" style="display:none">
+        <label id="districtLbl">المدينة / المنطقة</label>
+        <select id="cDistrict">
+          <option value="">اختر المدينة</option>
         </select>
       </div>
       <div class="form-group">
@@ -768,6 +769,24 @@ function updateCartUI(){
 }
 
 // ════════════════════════════════
+// 🗺️  GOVERNORATE / DISTRICT
+// ════════════════════════════════
+function onGovChange(){
+  const city = document.getElementById('cCity').value;
+  const districtGroup = document.getElementById('districtGroup');
+  const cDistrict = document.getElementById('cDistrict');
+  const districts = T[currentLang].districts[city] || [];
+  if(city && districts.length){
+    cDistrict.innerHTML = `<option value="">${currentLang==='ar'?'اختر المدينة':'Choose city'}</option>` +
+      districts.map(d=>`<option value="${d}">${d}</option>`).join('');
+    districtGroup.style.display = 'block';
+  } else {
+    districtGroup.style.display = 'none';
+    cDistrict.innerHTML = '';
+  }
+}
+
+// ════════════════════════════════
 // 🧾  ORDER SUBMISSION
 // ════════════════════════════════
 document.getElementById('submitOrder').addEventListener('click', async () => {
@@ -783,8 +802,9 @@ document.getElementById('submitOrder').addEventListener('click', async () => {
   const { data: order, error: oErr } = await sb.from('orders').insert({
     customer_name:    name,
     customer_phone:   phone,
-    customer_city:    document.getElementById('cCity').value,
-    customer_address: document.getElementById('cAddress').value,
+    customer_city:     document.getElementById('cCity').value,
+    customer_district: document.getElementById('cDistrict').value,
+    customer_address:  document.getElementById('cAddress').value,
     notes:            document.getElementById('cNotes').value,
     total,
     source: 'website'
@@ -868,6 +888,8 @@ const T = {
     phoneLbl:     'رقم الهاتف *',
     cityLbl:      'المحافظة',
     cityPh:       'اختر محافظتك',
+    districtLbl:  'المدينة / المنطقة',
+    districtPh:   'اختر المدينة',
     addressLbl:   'العنوان',
     addressPh:    'الشارع والحي',
     notesLbl:     'ملاحظات',
@@ -896,7 +918,8 @@ const T = {
     noResults:    'لا توجد نتائج',
     loadErr:      'تعذّر تحميل المنتجات',
     langFlag:     '🇬🇧', langLabel:'EN',
-    cities: ['القاهرة','الجيزة','الإسكندرية','الدقهلية','البحيرة','الشرقية','المنوفية','الغربية','الفيوم','بني سويف','المنيا','أسيوط','سوهاج','قنا','الأقصر','أسوان','البحر الأحمر','سيناء'],
+    cities: ['الجيزة'],
+    districts: { 'الجيزة': ['الحوامدية','البدرشين'] },
   },
   en: {
     logoSub:      'Mobile Accessories',
@@ -920,6 +943,8 @@ const T = {
     phoneLbl:     'Phone Number *',
     cityLbl:      'Governorate',
     cityPh:       'Choose your governorate',
+    districtLbl:  'City / District',
+    districtPh:   'Choose city',
     addressLbl:   'Address',
     addressPh:    'Street & District',
     notesLbl:     'Notes',
@@ -948,7 +973,8 @@ const T = {
     noResults:    'No results found',
     loadErr:      'Failed to load products',
     langFlag:     '🇸🇦', langLabel:'AR',
-    cities: ['Cairo','Giza','Alexandria','Dakahlia','Beheira','Sharkia','Monufia','Gharbia','Faiyum','Beni Suef','Minya','Asyut','Sohag','Qena','Luxor','Aswan','Red Sea','Sinai'],
+    cities: ['Giza'],
+    districts: { 'Giza': ['Hawamdeya','Badrasheen'] },
   }
 };
 
@@ -1006,6 +1032,14 @@ function applyLang(){
   const modalH3 = document.querySelector('#checkoutForm h3');
   if(modalH3) modalH3.textContent = t('orderTitle');
   const labels = document.querySelectorAll('#checkoutForm .form-group label');
+  const districtLblEl = document.getElementById('districtLbl');
+  if(districtLblEl) districtLblEl.textContent = t('districtLbl');
+  // reset district dropdown on lang change
+  const districtGroup = document.getElementById('districtGroup');
+  if(districtGroup) districtGroup.style.display = 'none';
+  const cDistrictEl = document.getElementById('cDistrict');
+  if(cDistrictEl) cDistrictEl.innerHTML = '';
+
   const keys = ['nameLbl','phoneLbl','cityLbl','addressLbl','notesLbl'];
   labels.forEach((el,i)=>{ if(keys[i]) el.textContent = t(keys[i]); });
   const inputs = [
