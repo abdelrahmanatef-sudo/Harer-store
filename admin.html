@@ -26,9 +26,25 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
   display:flex;flex-direction:column;padding:24px 0;flex-shrink:0;
 }
 .sidebar-logo{
-  font-family:'Cairo',sans-serif;font-size:24px;font-weight:900;
-  color:var(--cyan);padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.1);
+  padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.1);
   margin-bottom:16px;
+}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--cyan),var(--cyan-dk));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(0,212,232,.35);
+}
+.logo-text{
+  font-family:'Cairo',sans-serif;
+  font-size:22px;font-weight:900;
+  color:var(--cyan);letter-spacing:-1px;line-height:1;
+}
+.logo-text span{
+  color:rgba(255,255,255,.5);font-size:11px;font-weight:400;
+  display:block;margin-top:1px;letter-spacing:0;
 }
 .sidebar-logo span{display:block;font-size:11px;color:rgba(255,255,255,.5);font-weight:400;margin-top:2px}
 .nav-item{
@@ -173,7 +189,10 @@ tr:hover td{background:var(--bg)}
 <!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="logo">حرير</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#00D4E8,#00b8c9);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(0,212,232,.35)">⚡</div>
+      <div style="font-family:'Cairo',sans-serif;font-size:28px;font-weight:900;color:#00D4E8;letter-spacing:-1px">حرير</div>
+    </div>
     <p>لوحة الإدارة — تسجيل الدخول</p>
     <div class="form-group">
       <label>البريد الإلكتروني</label>
@@ -191,7 +210,12 @@ tr:hover td{background:var(--bg)}
 <!-- ADMIN SHELL -->
 <div class="shell" id="adminShell" style="display:none">
   <nav class="sidebar">
-    <div class="sidebar-logo">حرير<span>Admin Panel</span></div>
+    <div class="sidebar-logo">
+      <div class="logo-wrap">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">حرير<span>Admin Panel</span></div>
+      </div>
+    </div>
     <div class="nav-item active" data-tab="dashboard">📊 الرئيسية</div>
     <div class="nav-item" data-tab="orders">📦 الطلبات</div>
     <div class="nav-item" data-tab="products">🛍️ المنتجات</div>
