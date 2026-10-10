@@ -144,7 +144,7 @@ tr:hover td{background:var(--bg)}
 .status.cancelled{background:#f8d7da;color:#721c24}
 
 /* ACTION BTNS */
-.action-row{display:flex;gap:6px}
+.action-row{display:flex;gap:6px;flex-wrap:wrap}
 .action-btn{
   padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;
   border:2px solid;transition:all .2s;
@@ -153,6 +153,62 @@ tr:hover td{background:var(--bg)}
 .action-btn.view:hover{background:var(--cyan);color:#0a2a30}
 .action-btn.del  {border-color:#ff4757;color:#ff4757}
 .action-btn.del:hover{background:#ff4757;color:#fff}
+
+/* STATUS QUICK BTNS */
+.status-btns{display:flex;gap:4px;flex-wrap:wrap}
+.s-btn{
+  padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;
+  border:1.5px solid;cursor:pointer;transition:all .15s;background:transparent;
+}
+.s-btn.pending  {border-color:#856404;color:#856404}
+.s-btn.confirmed{border-color:#0c5460;color:#0c5460}
+.s-btn.shipped  {border-color:#155724;color:#155724}
+.s-btn.delivered{border-color:#155724;color:#155724}
+.s-btn.cancelled{border-color:#721c24;color:#721c24}
+.s-btn.active{color:#fff!important}
+.s-btn.pending.active  {background:#856404}
+.s-btn.confirmed.active{background:#0c5460}
+.s-btn.shipped.active  {background:#155724}
+.s-btn.delivered.active{background:#155724}
+.s-btn.cancelled.active{background:#721c24}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-btn{
+  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;
+  border:2px solid var(--silver);color:var(--fg2);cursor:pointer;
+  transition:all .2s;background:var(--bg);
+}
+.filter-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.filter-btn.active{background:var(--cyan);border-color:var(--cyan);color:#0a2a30}
+.filter-btn .count{
+  display:inline-block;background:rgba(0,0,0,.12);border-radius:10px;
+  padding:0 6px;font-size:11px;margin-right:4px;
+}
+.filter-btn.active .count{background:rgba(0,0,0,.15)}
+
+/* LIVE INDICATOR */
+.live-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;background:var(--bg);
+  border-bottom:1px solid var(--silver);font-size:12px;color:var(--fg3);
+}
+.live-dot{
+  width:8px;height:8px;border-radius:50%;background:#22c55e;
+  animation:pulse-dot 2s infinite;flex-shrink:0;
+}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.live-countdown{
+  margin-right:auto;font-weight:600;color:var(--fg2);
+  font-variant-numeric:tabular-nums;
+}
+
+/* NEW ORDER HIGHLIGHT */
+@keyframes flash-row{
+  0%,100%{background:transparent}
+  30%{background:rgba(0,212,232,.12)}
+}
+.row-new{animation:flash-row 1.5s ease 2}
 
 /* PRODUCT FORM */
 .form-card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
@@ -257,7 +313,26 @@ tr:hover td{background:var(--bg)}
         <div class="table-wrap">
           <div class="table-head">
             <h3>جميع الطلبات</h3>
-            <input class="search-input" id="orderSearch" placeholder="بحث...">
+            <input class="search-input" id="orderSearch" placeholder="بحث بالاسم أو الهاتف...">
+          </div>
+          <!-- FILTER BAR -->
+          <div style="padding:12px 16px;border-bottom:1px solid var(--silver)">
+            <div class="filter-bar" id="filterBar">
+              <button class="filter-btn active" data-filter="all">الكل <span class="count" id="fc-all">0</span></button>
+              <button class="filter-btn" data-filter="pending">في الانتظار <span class="count" id="fc-pending">0</span></button>
+              <button class="filter-btn" data-filter="confirmed">مؤكد <span class="count" id="fc-confirmed">0</span></button>
+              <button class="filter-btn" data-filter="shipped">جاري التوصيل <span class="count" id="fc-shipped">0</span></button>
+              <button class="filter-btn" data-filter="delivered">تم التسليم <span class="count" id="fc-delivered">0</span></button>
+              <button class="filter-btn" data-filter="cancelled">ملغي <span class="count" id="fc-cancelled">0</span></button>
+            </div>
+          </div>
+          <!-- LIVE BAR -->
+          <div class="live-bar">
+            <div class="live-dot"></div>
+            <span>تحديث تلقائي</span>
+            <span class="live-countdown" id="liveCountdown">30 ث</span>
+            <span id="lastUpdated" style="margin-right:8px"></span>
+            <button onclick="forceRefresh()" style="padding:3px 10px;border-radius:6px;border:1px solid var(--silver);background:var(--bg);color:var(--fg2);font-size:11px;cursor:pointer">🔄 تحديث الآن</button>
           </div>
           <div id="ordersTable"></div>
         </div>
@@ -379,12 +454,64 @@ document.querySelectorAll('.nav-item[data-tab]').forEach(el=>{
 });
 
 // ════════════════════════════════
-// 📊  LOAD DATA
+// 📊  LOAD DATA + LIVE REFRESH
 // ════════════════════════════════
-let allOrders=[], allProds=[];
+let allOrders=[], allProds=[], currentFilter='all', refreshTimer=null, countdown=30, lastOrderIds=new Set();
 
 async function loadAll(){
   await Promise.all([loadDashboard(), loadOrders(), loadProducts(), loadCatsForForm()]);
+  startLiveRefresh();
+}
+
+function startLiveRefresh(){
+  if(refreshTimer) clearInterval(refreshTimer);
+  countdown=30;
+  refreshTimer = setInterval(async ()=>{
+    countdown--;
+    const el = document.getElementById('liveCountdown');
+    if(el) el.textContent = countdown + ' ث';
+    if(countdown<=0){
+      countdown=30;
+      await refreshOrders();
+    }
+  }, 1000);
+}
+
+async function forceRefresh(){
+  countdown=30;
+  const el = document.getElementById('liveCountdown');
+  if(el) el.textContent='30 ث';
+  await refreshOrders();
+}
+
+async function refreshOrders(){
+  const prevIds = new Set(allOrders.map(o=>o.id));
+  await Promise.all([loadDashboard(), loadOrders()]);
+  // check for new orders
+  const newOrders = allOrders.filter(o=>!prevIds.has(o.id));
+  if(newOrders.length && prevIds.size>0){
+    playNotification();
+    toast('🔔 وصل ' + newOrders.length + ' طلب جديد!');
+  }
+  const now = new Date();
+  const el = document.getElementById('lastUpdated');
+  if(el) el.textContent = 'آخر تحديث: ' + now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+}
+
+function playNotification(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [523,659,784].forEach((freq,i)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value=freq; o.type='sine';
+      g.gain.setValueAtTime(0,ctx.currentTime+i*.15);
+      g.gain.linearRampToValueAtTime(.3,ctx.currentTime+i*.15+.05);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+i*.15+.25);
+      o.start(ctx.currentTime+i*.15);
+      o.stop(ctx.currentTime+i*.15+.3);
+    });
+  }catch(e){}
 }
 
 async function loadDashboard(){
@@ -405,7 +532,32 @@ async function loadDashboard(){
 async function loadOrders(){
   const { data } = await sb.from('orders').select('*').order('created_at',{ascending:false});
   allOrders = data||[];
-  renderOrdersTable('ordersTable', allOrders);
+  updateFilterCounts();
+  applyFilter(currentFilter);
+}
+
+function updateFilterCounts(){
+  const statuses = ['pending','confirmed','shipped','delivered','cancelled'];
+  document.getElementById('fc-all').textContent = allOrders.length;
+  statuses.forEach(s=>{
+    const el = document.getElementById('fc-'+s);
+    if(el) el.textContent = allOrders.filter(o=>o.status===s).length;
+  });
+}
+
+function applyFilter(filter){
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===filter);
+  });
+  const q = document.getElementById('orderSearch').value.toLowerCase();
+  let filtered = filter==='all' ? allOrders : allOrders.filter(o=>o.status===filter);
+  if(q) filtered = filtered.filter(o=>
+    o.customer_name?.toLowerCase().includes(q)||
+    o.customer_phone?.includes(q)||
+    o.order_number?.toLowerCase().includes(q)
+  );
+  renderOrdersTable('ordersTable', filtered);
 }
 
 async function loadProducts(){
@@ -428,28 +580,33 @@ function statusBadge(s){
   return `<span class="status ${s}">${labels[s]||s}</span>`;
 }
 
+const STATUS_LABELS = { pending:'⏳ انتظار', confirmed:'✅ مؤكد', shipped:'🚚 جاري', delivered:'🎉 تسليم', cancelled:'❌ ملغي' };
+
 function renderOrdersTable(targetId, orders){
   const wrap = document.getElementById(targetId);
   if(!orders.length){ wrap.innerHTML='<p style="padding:24px;color:var(--fg3)">لا توجد طلبات</p>'; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
-    <tbody>${orders.map(o=>`<tr>
+  const isNew = id => !lastOrderIds.has(id) && lastOrderIds.size>0;
+  wrap.innerHTML = `<div style="overflow-x:auto"><table>
+    <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th><th>تغيير الحالة</th></tr></thead>
+    <tbody>${orders.map(o=>`<tr class="${isNew(o.id)?'row-new':''}" id="row-${o.id}">
       <td style="font-weight:700;color:var(--cyan)">${o.order_number||'—'}</td>
-      <td>${escHtml(o.customer_name)}</td>
-      <td dir="ltr">${o.customer_phone}</td>
-      <td>${parseFloat(o.total||0).toLocaleString('ar-EG')} ج.م</td>
+      <td style="font-weight:600">${escHtml(o.customer_name)}</td>
+      <td dir="ltr" style="font-size:13px">${o.customer_phone}</td>
+      <td style="font-weight:700">${parseFloat(o.total||0).toLocaleString('ar-EG')} ج.م</td>
       <td>${statusBadge(o.status)}</td>
-      <td style="font-size:12px;color:var(--fg3)">${new Date(o.created_at).toLocaleDateString('ar-EG')}</td>
+      <td style="font-size:12px;color:var(--fg3)">${new Date(o.created_at).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'})}</td>
       <td>
-        <div class="action-row">
-          <select onchange="updateStatus('${o.id}',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--silver);background:var(--bg);color:var(--fg);font-size:12px">
-            ${['pending','confirmed','shipped','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
-          </select>
+        <div class="status-btns">
+          ${Object.entries(STATUS_LABELS).map(([s,l])=>`
+            <button class="s-btn ${s}${o.status===s?' active':''}" onclick="updateStatus('${o.id}','${s}',this)">${l}</button>
+          `).join('')}
         </div>
       </td>
     </tr>`).join('')}
     </tbody>
-  </table>`;
+  </table></div>`;
+  // track shown ids
+  lastOrderIds = new Set(orders.map(o=>o.id));
 }
 
 function renderProductsTable(prods){
@@ -476,10 +633,25 @@ function renderProductsTable(prods){
 // ════════════════════════════════
 // ✏️  ACTIONS
 // ════════════════════════════════
-async function updateStatus(orderId, status){
+async function updateStatus(orderId, status, btn){
+  // optimistic UI: update buttons immediately
+  if(btn){
+    const row = btn.closest('tr');
+    row.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    // update badge in same row
+    const badgeCell = row.cells[4];
+    if(badgeCell) badgeCell.innerHTML = statusBadge(status);
+  }
   const { error } = await sb.from('orders').update({ status }).eq('id', orderId);
-  if(error) toast('❌ فشل التحديث');
-  else toast('✅ تم تحديث الحالة');
+  if(error){ toast('❌ فشل التحديث'); loadOrders(); }
+  else{
+    toast('✅ تم تحديث الحالة إلى: '+STATUS_LABELS[status]);
+    // update local array
+    const o = allOrders.find(x=>x.id===orderId);
+    if(o) o.status=status;
+    updateFilterCounts();
+  }
 }
 
 async function deleteProduct(id){
@@ -509,15 +681,13 @@ document.getElementById('saveProduct').addEventListener('click', async ()=>{
 });
 
 // ════════════════════════════════
-// 🔍  SEARCH FILTERS
+// 🔍  SEARCH + FILTER WIRING
 // ════════════════════════════════
-document.getElementById('orderSearch').addEventListener('input', e=>{
-  const q = e.target.value.toLowerCase();
-  renderOrdersTable('ordersTable', allOrders.filter(o=>
-    o.customer_name?.toLowerCase().includes(q) ||
-    o.customer_phone?.includes(q) ||
-    o.order_number?.toLowerCase().includes(q)
-  ));
+document.getElementById('orderSearch').addEventListener('input', ()=> applyFilter(currentFilter));
+
+document.getElementById('filterBar').addEventListener('click', e=>{
+  const btn = e.target.closest('.filter-btn');
+  if(btn) applyFilter(btn.dataset.filter);
 });
 
 document.getElementById('productSearch').addEventListener('input', e=>{
