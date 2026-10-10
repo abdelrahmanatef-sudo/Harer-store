@@ -1005,12 +1005,20 @@ function applyAdminLang(){
   const loginBtnEl = document.getElementById('loginBtn');
   if(loginBtnEl) loginBtnEl.textContent = t('loginBtn');
 
-  // sidebar nav
+  // sidebar nav — value already includes emoji
   const navItems = document.querySelectorAll('.nav-item[data-tab]');
   const navKeys = ['navDash','navOrders','navProducts','navAdd'];
   navItems.forEach((el,i)=>{ if(navKeys[i]) el.textContent = t(navKeys[i]); });
   const logoutEl = document.getElementById('logoutBtn');
   if(logoutEl) logoutEl.textContent = t('navLogout');
+
+  // bottom nav labels (strip leading emoji + space from value)
+  function stripEmoji(s){ return s.replace(/^[\p{Emoji}\s]+/u,'').trim(); }
+  const bnDash = document.getElementById('bn-dashboard'); if(bnDash) bnDash.textContent = stripEmoji(t('navDash'));
+  const bnOrders = document.getElementById('bn-orders');  if(bnOrders) bnOrders.textContent = stripEmoji(t('navOrders'));
+  const bnProds = document.getElementById('bn-products'); if(bnProds) bnProds.textContent = stripEmoji(t('navProducts'));
+  const bnAdd = document.getElementById('bn-add');        if(bnAdd) bnAdd.textContent = stripEmoji(t('navAdd'));
+  const bnLogout = document.getElementById('bn-logout');  if(bnLogout) bnLogout.textContent = stripEmoji(t('navLogout'));
 
   // page titles map
   const currentTab = document.querySelector('.nav-item.active')?.dataset?.tab || 'dashboard';
