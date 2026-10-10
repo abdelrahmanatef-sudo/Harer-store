@@ -7,7 +7,7 @@
 <meta name="description" content="شواحن وكابلات وسماعات أصلية — Anker · Apple · Samsung · ThreeTech">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2300D4E8'/><text y='.9em' font-size='65' x='50%' text-anchor='middle' dominant-baseline='middle' dy='.1em'>⚡</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600;700;900&display=swap">
 
 <!-- ══ Supabase SDK ══ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -396,6 +396,22 @@ footer{
   padding-top:20px;text-align:center;font-size:13px;
 }
 
+/* ══ LANG TOGGLE ══ */
+.lang-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  border:2px solid var(--silver);color:var(--fg2);
+  font-size:13px;font-weight:700;
+  transition:all var(--transition);white-space:nowrap;
+}
+.lang-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.lang-flag{font-size:15px}
+
+/* EN font override */
+[lang="en"] body{font-family:'Inter',sans-serif}
+[lang="en"] .logo-text .logo-ar{letter-spacing:0}
+[lang="en"] h1,[lang="en"] h2,[lang="en"] h3,[lang="en"] h4{font-family:'Inter',sans-serif}
+
 /* ══ RESPONSIVE ══ */
 @media(max-width:640px){
   .hero{padding:48px 0}
@@ -424,6 +440,10 @@ footer{
     </div>
 
     <div class="header-actions">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+        <span class="lang-flag" id="langFlag">🇬🇧</span>
+        <span id="langLabel">EN</span>
+      </button>
       <button class="icon-btn" id="cartBtn" aria-label="السلة">
         🛒
         <span class="cart-badge" id="cartBadge">0</span>
@@ -623,7 +643,7 @@ async function loadProducts(){
     .order('created_at', { ascending: false });
 
   if(error){
-    grid.innerHTML = `<div class="empty"><div class="icon">😕</div><p>تعذّر تحميل المنتجات</p></div>`;
+    grid.innerHTML = `<div class="empty"><div class="icon">😕</div><p>${t('loadErr')}</p></div>`;
     return;
   }
   allProducts = data || [];
@@ -641,9 +661,9 @@ function renderProducts(){
     return matchCat && matchQ;
   });
 
-  document.getElementById('countLabel').textContent = `${list.length} منتج`;
+  document.getElementById('countLabel').textContent = t('productCount', list.length);
   if(!list.length){
-    grid.innerHTML = `<div class="empty"><div class="icon">🔍</div><p>لا توجد نتائج</p></div>`;
+    grid.innerHTML = `<div class="empty"><div class="icon">🔍</div><p>${t('noResults')}</p></div>`;
     return;
   }
   grid.innerHTML = list.map(productCard).join('');
@@ -674,7 +694,7 @@ function productCard(p){
       </div>
       <div class="card-footer">
         <button class="add-btn" data-id="${p.id}" data-name="${p.name}"
-          data-price="${p.price}" data-img="${p.image_url||''}">🛒 أضف للسلة</button>
+          data-price="${p.price}" data-img="${p.image_url||''}">${t('addToCart')}</button>
         <button class="wish-btn" aria-label="المفضلة">♡</button>
       </div>
     </div>
@@ -704,7 +724,7 @@ function addToCart(id){
   const item = cart.find(i=>i.id===id);
   if(item) item.qty++;
   else cart.push({ id:p.id, name:p.name, price:p.price, image_url:p.image_url, qty:1 });
-  saveCart(); updateCartUI(); toast('✅ تمت الإضافة للسلة');
+  saveCart(); updateCartUI(); toast(t('toastAdded'));
 }
 
 function removeItem(id){ cart = cart.filter(i=>i.id!==id); saveCart(); updateCartUI(); }
@@ -723,11 +743,12 @@ function updateCartUI(){
   const badge = document.getElementById('cartBadge');
   badge.textContent = count;
   badge.classList.toggle('show', count>0);
-  document.getElementById('cartTotal').textContent = `${total.toLocaleString('ar-EG')} ج.م`;
+  const currency = currentLang==='ar' ? 'ج.م' : 'EGP';
+  document.getElementById('cartTotal').textContent = `${total.toLocaleString('ar-EG')} ${currency}`;
 
   const box = document.getElementById('cartItems');
   if(!cart.length){
-    box.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>السلة فارغة</p></div>`;
+    box.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>${t('cartEmpty')}</p></div>`;
     return;
   }
   box.innerHTML = cart.map(i=>`
@@ -752,11 +773,11 @@ function updateCartUI(){
 document.getElementById('submitOrder').addEventListener('click', async () => {
   const name  = document.getElementById('cName').value.trim();
   const phone = document.getElementById('cPhone').value.trim();
-  if(!name||!phone){ toast('⚠️ الاسم والهاتف مطلوبان'); return; }
-  if(!cart.length){ toast('⚠️ السلة فارغة'); return; }
+  if(!name||!phone){ toast(t('errNamePhone')); return; }
+  if(!cart.length){ toast(t('errEmpty')); return; }
 
   const btn = document.getElementById('submitOrder');
-  btn.disabled = true; btn.textContent = '⏳ جارٍ الإرسال...';
+  btn.disabled = true; btn.textContent = t('sending');
 
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const { data: order, error: oErr } = await sb.from('orders').insert({
@@ -769,7 +790,7 @@ document.getElementById('submitOrder').addEventListener('click', async () => {
     source: 'website'
   }).select().single();
 
-  if(oErr){ toast('❌ حدث خطأ، حاول تاني'); btn.disabled=false; btn.textContent='تأكيد الطلب ✔'; return; }
+  if(oErr){ toast(t('errServer')); btn.disabled=false; btn.textContent=t('confirm'); return; }
 
   const items = cart.map(i=>({ order_id:order.id, product_id:i.id, name:i.name, price:i.price, qty:i.qty }));
   await sb.from('order_items').insert(items);
@@ -777,15 +798,15 @@ document.getElementById('submitOrder').addEventListener('click', async () => {
   // Show success
   document.getElementById('checkoutForm').style.display = 'none';
   document.getElementById('orderSuccess').style.display = 'block';
-  document.getElementById('successOrderNum').textContent = `رقم طلبك: ${order.order_number}`;
+  document.getElementById('successOrderNum').textContent = t('orderNum', order.order_number);
 
   cart = []; saveCart(); updateCartUI();
-  btn.disabled = false; btn.textContent = 'تأكيد الطلب ✔';
+  btn.disabled = false; btn.textContent = t('confirm');
 });
 
 // Modal open/close
 document.getElementById('checkoutBtn').addEventListener('click',()=>{
-  if(!cart.length){ toast('⚠️ السلة فارغة'); return; }
+  if(!cart.length){ toast(t('errEmpty')); return; }
   closeCart();
   document.getElementById('checkoutModal').classList.add('open');
 });
@@ -822,11 +843,232 @@ function toast(msg){
 }
 
 // ════════════════════════════════
+// 🌍  TRANSLATIONS
+// ════════════════════════════════
+const T = {
+  ar: {
+    logoSub:      'اكسسوارات الموبايل',
+    searchPh:     'ابحث عن منتج...',
+    heroTag:      '✨ أصلي 100% — ضمان وفاتورة',
+    heroH1:       'شحن سريع<br><em>بشكل أسرع</em>',
+    heroP:        'اكسسوارات Anker وApple وSamsung وThreeTech — الأفضل بأسعار منافسة',
+    shopNow:      '🛍️ تسوق الآن',
+    learnMore:    'اعرف أكتر',
+    allProducts:  'كل المنتجات',
+    ourProducts:  'منتجاتنا',
+    productCount: n => `${n} منتج`,
+    addToCart:    '🛒 أضف للسلة',
+    cartTitle:    '🛒 سلتك',
+    total:        'الإجمالي',
+    checkout:     'إتمام الطلب 🚀',
+    cartEmpty:    'السلة فارغة',
+    orderTitle:   '📦 تفاصيل الطلب',
+    nameLbl:      'الاسم *',
+    namePh:       'اسمك الكامل',
+    phoneLbl:     'رقم الهاتف *',
+    cityLbl:      'المحافظة',
+    cityPh:       'اختر محافظتك',
+    addressLbl:   'العنوان',
+    addressPh:    'الشارع والحي',
+    notesLbl:     'ملاحظات',
+    notesPh:      'أي تفاصيل إضافية...',
+    cancel:       'إلغاء',
+    confirm:      'تأكيد الطلب ✔',
+    sending:      '⏳ جارٍ الإرسال...',
+    successH:     'تم استلام طلبك!',
+    successP:     'سنتواصل معك قريباً على الرقم المسجل',
+    great:        'رائع! 👍',
+    footerDesc:   'اكسسوارات أصلية لموبايلك — شواحن وكابلات وسماعات',
+    quickLinks:   'روابط سريعة',
+    home:         'الرئيسية',
+    products:     'المنتجات',
+    contact:      'تواصل معنا',
+    contactUs:    'تواصل معنا',
+    whatsapp:     '📱 واتساب',
+    facebook:     '📘 فيسبوك',
+    instagram:    '📸 إنستجرام',
+    copyright:    '© 2025 حرير — جميع الحقوق محفوظة',
+    toastAdded:   '✅ تمت الإضافة للسلة',
+    errNamePhone: '⚠️ الاسم والهاتف مطلوبان',
+    errEmpty:     '⚠️ السلة فارغة',
+    errServer:    '❌ حدث خطأ، حاول تاني',
+    orderNum:     n => `رقم طلبك: ${n}`,
+    noResults:    'لا توجد نتائج',
+    loadErr:      'تعذّر تحميل المنتجات',
+    langFlag:     '🇬🇧', langLabel:'EN',
+    cities: ['القاهرة','الجيزة','الإسكندرية','الدقهلية','البحيرة','الشرقية','المنوفية','الغربية','الفيوم','بني سويف','المنيا','أسيوط','سوهاج','قنا','الأقصر','أسوان','البحر الأحمر','سيناء'],
+  },
+  en: {
+    logoSub:      'Mobile Accessories',
+    searchPh:     'Search for a product...',
+    heroTag:      '✨ 100% Original — Warranty & Invoice',
+    heroH1:       'Fast Charging<br><em>Even Faster</em>',
+    heroP:        'Anker, Apple, Samsung & ThreeTech accessories — the best at competitive prices',
+    shopNow:      '🛍️ Shop Now',
+    learnMore:    'Learn More',
+    allProducts:  'All Products',
+    ourProducts:  'Our Products',
+    productCount: n => `${n} products`,
+    addToCart:    '🛒 Add to Cart',
+    cartTitle:    '🛒 Your Cart',
+    total:        'Total',
+    checkout:     'Checkout 🚀',
+    cartEmpty:    'Your cart is empty',
+    orderTitle:   '📦 Order Details',
+    nameLbl:      'Name *',
+    namePh:       'Your full name',
+    phoneLbl:     'Phone Number *',
+    cityLbl:      'Governorate',
+    cityPh:       'Choose your governorate',
+    addressLbl:   'Address',
+    addressPh:    'Street & District',
+    notesLbl:     'Notes',
+    notesPh:      'Any additional details...',
+    cancel:       'Cancel',
+    confirm:      'Confirm Order ✔',
+    sending:      '⏳ Sending...',
+    successH:     'Order Received!',
+    successP:     "We'll contact you soon on the registered number",
+    great:        'Great! 👍',
+    footerDesc:   'Original accessories for your phone — chargers, cables & headphones',
+    quickLinks:   'Quick Links',
+    home:         'Home',
+    products:     'Products',
+    contact:      'Contact Us',
+    contactUs:    'Contact Us',
+    whatsapp:     '📱 WhatsApp',
+    facebook:     '📘 Facebook',
+    instagram:    '📸 Instagram',
+    copyright:    '© 2025 Harir — All rights reserved',
+    toastAdded:   '✅ Added to cart',
+    errNamePhone: '⚠️ Name and phone are required',
+    errEmpty:     '⚠️ Cart is empty',
+    errServer:    '❌ An error occurred, try again',
+    orderNum:     n => `Your order: ${n}`,
+    noResults:    'No results found',
+    loadErr:      'Failed to load products',
+    langFlag:     '🇸🇦', langLabel:'AR',
+    cities: ['Cairo','Giza','Alexandria','Dakahlia','Beheira','Sharkia','Monufia','Gharbia','Faiyum','Beni Suef','Minya','Asyut','Sohag','Qena','Luxor','Aswan','Red Sea','Sinai'],
+  }
+};
+
+let currentLang = localStorage.getItem('harir_lang') || 'ar';
+
+function t(key, ...args){
+  const val = T[currentLang][key];
+  return typeof val === 'function' ? val(...args) : (val ?? T.ar[key]);
+}
+
+function applyLang(){
+  const lang = currentLang;
+  const html = document.documentElement;
+  html.lang = lang;
+  html.dir  = lang==='ar' ? 'rtl' : 'ltr';
+  document.title = lang==='ar' ? 'حرير — اكسسوارات الموبايل الأصلية' : 'Harir — Original Mobile Accessories';
+
+  // header
+  const logoSub = document.querySelector('.logo-text span');
+  if(logoSub) logoSub.textContent = t('logoSub');
+  const si = document.getElementById('searchInput');
+  if(si) si.placeholder = t('searchPh');
+  document.getElementById('langFlag').textContent = t('langFlag');
+  document.getElementById('langLabel').textContent = t('langLabel');
+
+  // hero
+  const heroTag = document.querySelector('.hero-tag');
+  if(heroTag) heroTag.textContent = t('heroTag');
+  const heroH1 = document.querySelector('.hero h1');
+  if(heroH1) heroH1.innerHTML = t('heroH1');
+  const heroP = document.querySelector('.hero p');
+  if(heroP) heroP.textContent = t('heroP');
+  const shopBtn = document.querySelector('.btn-primary');
+  if(shopBtn) shopBtn.innerHTML = t('shopNow');
+  const learnBtn = document.querySelector('.btn-ghost');
+  if(learnBtn) learnBtn.textContent = t('learnMore');
+
+  // cats "all" pill
+  const allPill = document.querySelector('.cat-pill[data-slug="all"]');
+  if(allPill) allPill.textContent = t('allProducts');
+
+  // section head
+  const secH2 = document.querySelector('.section-head h2');
+  if(secH2) secH2.textContent = t('ourProducts');
+
+  // cart drawer
+  const drawerH = document.querySelector('.drawer-head h3');
+  if(drawerH) drawerH.textContent = t('cartTitle');
+  const totalLabel = document.querySelector('.cart-total span:first-child');
+  if(totalLabel) totalLabel.textContent = t('total');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  if(checkoutBtn) checkoutBtn.textContent = t('checkout');
+
+  // modal
+  const modalH3 = document.querySelector('#checkoutForm h3');
+  if(modalH3) modalH3.textContent = t('orderTitle');
+  const labels = document.querySelectorAll('#checkoutForm .form-group label');
+  const keys = ['nameLbl','phoneLbl','cityLbl','addressLbl','notesLbl'];
+  labels.forEach((el,i)=>{ if(keys[i]) el.textContent = t(keys[i]); });
+  const inputs = [
+    [document.getElementById('cName'), 'namePh'],
+    [document.getElementById('cPhone'), 'phoneLbl'],
+    [document.getElementById('cAddress'), 'addressPh'],
+    [document.getElementById('cNotes'), 'notesPh'],
+  ];
+  inputs.forEach(([el,k])=>{ if(el) el.placeholder = t(k); });
+
+  // city select
+  const cCity = document.getElementById('cCity');
+  if(cCity){
+    const cities = T[lang].cities;
+    cCity.innerHTML = `<option value="">${t('cityPh')}</option>` +
+      cities.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+
+  const cancelBtn = document.getElementById('cancelOrder');
+  if(cancelBtn) cancelBtn.textContent = t('cancel');
+  const submitBtn = document.getElementById('submitOrder');
+  if(submitBtn) submitBtn.textContent = t('confirm');
+
+  // success screen
+  const sucP = document.querySelector('#orderSuccess p:first-of-type');
+  if(sucP) sucP.textContent = t('successP');
+  const sucH4 = document.querySelector('#orderSuccess h4');
+  if(sucH4) sucH4.textContent = t('successH');
+  const closeSuccessBtn = document.getElementById('closeSuccess');
+  if(closeSuccessBtn) closeSuccessBtn.textContent = t('great');
+
+  // footer
+  const footerDesc = document.querySelector('.footer-grid > div > p');
+  if(footerDesc) footerDesc.textContent = t('footerDesc');
+  const footerCols = document.querySelectorAll('.footer-col h4');
+  if(footerCols[0]) footerCols[0].textContent = t('quickLinks');
+  if(footerCols[1]) footerCols[1].textContent = t('contactUs');
+  const footerLinks = document.querySelectorAll('.footer-col:first-of-type ul li a');
+  const linkKeys = ['home','products','contact'];
+  footerLinks.forEach((el,i)=>{ if(linkKeys[i]) el.textContent = t(linkKeys[i]); });
+  const socialLinks = document.querySelectorAll('.footer-col:last-of-type ul li a');
+  [['whatsapp'],['facebook'],['instagram']].forEach(([k],i)=>{ if(socialLinks[i]) socialLinks[i].textContent = t(k); });
+  const copyright = document.querySelector('.footer-bottom');
+  if(copyright) copyright.textContent = t('copyright');
+
+  // re-render products to update "أضف للسلة" etc
+  renderProducts();
+  updateCartUI();
+  localStorage.setItem('harir_lang', lang);
+}
+
+function toggleLang(){
+  currentLang = currentLang==='ar' ? 'en' : 'ar';
+  applyLang();
+}
+
+// ════════════════════════════════
 // 🚀  INIT
 // ════════════════════════════════
 (async () => {
   await Promise.all([loadCategories(), loadProducts()]);
   updateCartUI();
+  applyLang();
 })();
 </script>
 </body>

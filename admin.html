@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>حرير — لوحة الإدارة</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2300D4E8'/><text y='.9em' font-size='65' x='50%' text-anchor='middle' dominant-baseline='middle' dy='.1em'>⚡</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600;700;900&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
@@ -238,6 +238,31 @@ tr:hover td{background:var(--bg)}
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+/* LANG TOGGLE */
+.lang-toggle{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;
+  border:2px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .2s;background:transparent;
+}
+.lang-toggle:hover{border-color:var(--cyan);color:var(--cyan)}
+[lang="en"] body{font-family:'Inter',sans-serif}
+
+/* LANG BTN */
+.lang-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  border:2px solid var(--silver);color:var(--fg2);
+  font-size:13px;font-weight:700;
+  transition:all .2s;white-space:nowrap;cursor:pointer;
+}
+.lang-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* EN overrides */
+[lang="en"] body,[lang="en"] input,[lang="en"] select,[lang="en"] textarea,[lang="en"] button{font-family:'Inter',sans-serif}
+[lang="en"] h1,[lang="en"] h3{font-family:'Inter',sans-serif}
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{display:none}
@@ -290,7 +315,13 @@ tr:hover td{background:var(--bg)}
   <div class="main">
     <div class="topbar">
       <h1 id="pageTitle">الرئيسية</h1>
-      <span style="font-size:13px;color:var(--fg3)" id="adminEmail"></span>
+      <div style="display:flex;align-items:center;gap:12px;margin-right:auto">
+        <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+          <span id="langFlag">🇬🇧</span>
+          <span id="langLabel">EN</span>
+        </button>
+        <span style="font-size:13px;color:var(--fg3)" id="adminEmail"></span>
+      </div>
     </div>
 
     <div class="content">
@@ -417,6 +448,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 async function checkAuth(){
   const { data:{ session } } = await sb.auth.getSession();
   if(session){ showAdmin(session.user); loadAll(); }
+  else { applyAdminLang(); } // apply lang on login screen too
 }
 
 document.getElementById('loginBtn').addEventListener('click', async ()=>{
@@ -431,6 +463,7 @@ function showAdmin(user){
   document.getElementById('loginWrap').style.display  = 'none';
   document.getElementById('adminShell').style.display = 'flex';
   document.getElementById('adminEmail').textContent   = user.email;
+  applyAdminLang();
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
@@ -449,7 +482,7 @@ document.querySelectorAll('.nav-item[data-tab]').forEach(el=>{
     el.classList.add('active');
     document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
     document.getElementById('tab-'+tab).style.display='block';
-    document.getElementById('pageTitle').textContent = titles[tab];
+    document.getElementById('pageTitle').textContent = t('pageTitle')[tab]||'';
   });
 });
 
@@ -491,11 +524,11 @@ async function refreshOrders(){
   const newOrders = allOrders.filter(o=>!prevIds.has(o.id));
   if(newOrders.length && prevIds.size>0){
     playNotification();
-    toast('🔔 وصل ' + newOrders.length + ' طلب جديد!');
+    toast(t('newOrder', newOrders.length));
   }
   const now = new Date();
   const el = document.getElementById('lastUpdated');
-  if(el) el.textContent = 'آخر تحديث: ' + now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+  if(el) el.textContent = t('lastUpdated', now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}));
 }
 
 function playNotification(){
@@ -580,24 +613,27 @@ function statusBadge(s){
   return `<span class="status ${s}">${labels[s]||s}</span>`;
 }
 
-const STATUS_LABELS = { pending:'⏳ انتظار', confirmed:'✅ مؤكد', shipped:'🚚 جاري', delivered:'🎉 تسليم', cancelled:'❌ ملغي' };
+function getStatusLabels(){ return currentLang==='ar'
+  ? { pending:'⏳ انتظار', confirmed:'✅ مؤكد', shipped:'🚚 جاري', delivered:'🎉 تسليم', cancelled:'❌ ملغي' }
+  : { pending:'⏳ Pending', confirmed:'✅ Confirmed', shipped:'🚚 Shipped', delivered:'🎉 Delivered', cancelled:'❌ Cancelled' };
+}
 
 function renderOrdersTable(targetId, orders){
   const wrap = document.getElementById(targetId);
-  if(!orders.length){ wrap.innerHTML='<p style="padding:24px;color:var(--fg3)">لا توجد طلبات</p>'; return; }
+  if(!orders.length){ wrap.innerHTML=`<p style="padding:24px;color:var(--fg3)">${t('noOrders')}</p>`; return; }
   const isNew = id => !lastOrderIds.has(id) && lastOrderIds.size>0;
   wrap.innerHTML = `<div style="overflow-x:auto"><table>
-    <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th><th>تغيير الحالة</th></tr></thead>
+    <thead><tr><th>${t('colOrder')}</th><th>${t('colName')}</th><th>${t('colPhone')}</th><th>${t('colTotal')}</th><th>${t('colStatus')}</th><th>${t('colDate')}</th><th>${t('colChange')}</th></tr></thead>
     <tbody>${orders.map(o=>`<tr class="${isNew(o.id)?'row-new':''}" id="row-${o.id}">
       <td style="font-weight:700;color:var(--cyan)">${o.order_number||'—'}</td>
       <td style="font-weight:600">${escHtml(o.customer_name)}</td>
       <td dir="ltr" style="font-size:13px">${o.customer_phone}</td>
-      <td style="font-weight:700">${parseFloat(o.total||0).toLocaleString('ar-EG')} ج.م</td>
+      <td style="font-weight:700">${parseFloat(o.total||0).toLocaleString('ar-EG')} ${t('currency')}</td>
       <td>${statusBadge(o.status)}</td>
       <td style="font-size:12px;color:var(--fg3)">${new Date(o.created_at).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'})}</td>
       <td>
         <div class="status-btns">
-          ${Object.entries(STATUS_LABELS).map(([s,l])=>`
+          ${Object.entries(getStatusLabels()).map(([s,l])=>`
             <button class="s-btn ${s}${o.status===s?' active':''}" onclick="updateStatus('${o.id}','${s}',this)">${l}</button>
           `).join('')}
         </div>
@@ -611,18 +647,18 @@ function renderOrdersTable(targetId, orders){
 
 function renderProductsTable(prods){
   const wrap = document.getElementById('productsTable');
-  if(!prods.length){ wrap.innerHTML='<p style="padding:24px;color:var(--fg3)">لا توجد منتجات</p>'; return; }
+  if(!prods.length){ wrap.innerHTML=`<p style="padding:24px;color:var(--fg3)">${t('noProds')}</p>`; return; }
   wrap.innerHTML = `<table>
-    <thead><tr><th>الاسم</th><th>الفئة</th><th>الماركة</th><th>السعر</th><th>المخزون</th><th>إجراء</th></tr></thead>
+    <thead><tr><th>${t('colProdName')}</th><th>${t('colCat')}</th><th>${t('colBrand')}</th><th>${t('colPrice')}</th><th>${t('colStock')}</th><th>${t('colAction')}</th></tr></thead>
     <tbody>${prods.map(p=>`<tr>
       <td style="font-weight:700">${escHtml(p.name)}</td>
       <td>${p.categories?.name||'—'}</td>
       <td>${p.brand||'—'}</td>
-      <td>${parseFloat(p.price).toLocaleString('ar-EG')} ج.م</td>
+      <td>${parseFloat(p.price).toLocaleString('ar-EG')} ${t('currency')}</td>
       <td>${p.stock??0}</td>
       <td>
         <div class="action-row">
-          <button class="action-btn del" onclick="deleteProduct('${p.id}')">حذف</button>
+          <button class="action-btn del" onclick="deleteProduct('${p.id}')">${t('delBtn')}</button>
         </div>
       </td>
     </tr>`).join('')}
@@ -646,7 +682,7 @@ async function updateStatus(orderId, status, btn){
   const { error } = await sb.from('orders').update({ status }).eq('id', orderId);
   if(error){ toast('❌ فشل التحديث'); loadOrders(); }
   else{
-    toast('✅ تم تحديث الحالة إلى: '+STATUS_LABELS[status]);
+    toast(t('toastUpdated', getStatusLabels()[status]));
     // update local array
     const o = allOrders.find(x=>x.id===orderId);
     if(o) o.status=status;
@@ -655,16 +691,16 @@ async function updateStatus(orderId, status, btn){
 }
 
 async function deleteProduct(id){
-  if(!confirm('هتحذف المنتج ده؟')) return;
+  if(!confirm(t('delConfirm'))) return;
   const { error } = await sb.from('products').delete().eq('id', id);
-  if(error) toast('❌ فشل الحذف');
-  else { toast('✅ تم الحذف'); loadProducts(); }
+  if(error) toast(t('errDel'));
+  else { toast(t('toastDeleted')); loadProducts(); }
 }
 
 document.getElementById('saveProduct').addEventListener('click', async ()=>{
   const name  = document.getElementById('pName').value.trim();
   const price = parseFloat(document.getElementById('pPrice').value);
-  if(!name||!price){ toast('⚠️ الاسم والسعر مطلوبان'); return; }
+  if(!name||!price){ toast(t('errFields')); return; }
 
   const { error } = await sb.from('products').insert({
     name,
@@ -676,8 +712,8 @@ document.getElementById('saveProduct').addEventListener('click', async ()=>{
     image_url: document.getElementById('pImg').value||null,
     description: document.getElementById('pDesc').value||null,
   });
-  if(error){ toast('❌ حدث خطأ'); console.error(error); }
-  else { toast('✅ تم حفظ المنتج'); loadProducts(); }
+  if(error){ toast(t('errSave')); console.error(error); }
+  else { toast(t('toastSaved')); loadProducts(); }
 });
 
 // ════════════════════════════════
@@ -706,6 +742,264 @@ function toast(msg){
   toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 function escHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+// ════════════════════════════════
+// 🌍  TRANSLATIONS — ADMIN
+// ════════════════════════════════
+const T = {
+  ar: {
+    pageTitle:   { dashboard:'الرئيسية', orders:'الطلبات', products:'المنتجات', 'add-product':'منتج جديد' },
+    loginTitle:  'لوحة الإدارة — تسجيل الدخول',
+    emailLbl:    'البريد الإلكتروني',
+    passLbl:     'كلمة المرور',
+    loginBtn:    'دخول',
+    loginErr:    'بيانات خاطئة!',
+    navDash:     '📊 الرئيسية',
+    navOrders:   '📦 الطلبات',
+    navProducts: '🛍️ المنتجات',
+    navAdd:      '➕ منتج جديد',
+    navLogout:   '🚪 خروج',
+    statOrders:  'إجمالي الطلبات',
+    statPending: 'في الانتظار',
+    statRevenue: 'إجمالي الإيرادات',
+    statProds:   'عدد المنتجات',
+    recentTitle: 'آخر الطلبات',
+    allOrders:   'جميع الطلبات',
+    searchPh:    'بحث بالاسم أو الهاتف...',
+    filterAll:   'الكل',
+    filterPend:  'في الانتظار',
+    filterConf:  'مؤكد',
+    filterShip:  'جاري التوصيل',
+    filterDel:   'تم التسليم',
+    filterCanc:  'ملغي',
+    liveAuto:    'تحديث تلقائي',
+    refreshNow:  '🔄 تحديث الآن',
+    currency:    'ج.م',
+    colOrder:    'رقم الطلب',
+    colName:     'العميل',
+    colPhone:    'الهاتف',
+    colTotal:    'الإجمالي',
+    colStatus:   'الحالة',
+    colDate:     'التاريخ',
+    colChange:   'تغيير الحالة',
+    noOrders:    'لا توجد طلبات',
+    prodTitle:   'المنتجات',
+    prodSearch:  'بحث...',
+    colProdName: 'الاسم',
+    colCat:      'الفئة',
+    colBrand:    'الماركة',
+    colPrice:    'السعر',
+    colStock:    'المخزون',
+    colAction:   'إجراء',
+    noProds:     'لا توجد منتجات',
+    addTitle:    '➕ إضافة منتج جديد',
+    lblName:     'اسم المنتج *',
+    phName:      'مثال: شاحن Anker 20W',
+    lblBrand:    'الماركة',
+    lblPrice:    'السعر (ج.م) *',
+    phPrice:     '299',
+    lblOld:      'السعر القديم (ج.م)',
+    phOld:       '350',
+    lblCat:      'الفئة',
+    lblStock:    'المخزون',
+    lblImg:      'رابط الصورة',
+    phImg:       'https://...',
+    lblDesc:     'الوصف',
+    phDesc:      'وصف مختصر...',
+    saveBtn:     '💾 حفظ المنتج',
+    delBtn:      'حذف',
+    delConfirm:  'هتحذف المنتج ده؟',
+    toastUpdated:s=>'✅ تم تحديث الحالة إلى: '+s,
+    toastDeleted:'✅ تم الحذف',
+    toastSaved:  '✅ تم حفظ المنتج',
+    errDel:      '❌ فشل الحذف',
+    errUpdate:   '❌ فشل التحديث',
+    errSave:     '❌ حدث خطأ',
+    errFields:   '⚠️ الاسم والسعر مطلوبان',
+    newOrder:    n=>'🔔 وصل '+n+' طلب جديد!',
+    lastUpdated: t=>'آخر تحديث: '+t,
+    langFlag:'🇬🇧', langLabel:'EN',
+    catPlaceholder:'اختر...',
+  },
+  en: {
+    pageTitle:   { dashboard:'Dashboard', orders:'Orders', products:'Products', 'add-product':'New Product' },
+    loginTitle:  'Admin Panel — Sign In',
+    emailLbl:    'Email Address',
+    passLbl:     'Password',
+    loginBtn:    'Sign In',
+    loginErr:    'Wrong credentials!',
+    navDash:     '📊 Dashboard',
+    navOrders:   '📦 Orders',
+    navProducts: '🛍️ Products',
+    navAdd:      '➕ New Product',
+    navLogout:   '🚪 Sign Out',
+    statOrders:  'Total Orders',
+    statPending: 'Pending',
+    statRevenue: 'Total Revenue',
+    statProds:   'Products',
+    recentTitle: 'Recent Orders',
+    allOrders:   'All Orders',
+    searchPh:    'Search by name or phone...',
+    filterAll:   'All',
+    filterPend:  'Pending',
+    filterConf:  'Confirmed',
+    filterShip:  'Shipped',
+    filterDel:   'Delivered',
+    filterCanc:  'Cancelled',
+    liveAuto:    'Auto-refresh',
+    refreshNow:  '🔄 Refresh Now',
+    currency:    'EGP',
+    colOrder:    'Order #',
+    colName:     'Customer',
+    colPhone:    'Phone',
+    colTotal:    'Total',
+    colStatus:   'Status',
+    colDate:     'Date',
+    colChange:   'Change Status',
+    noOrders:    'No orders found',
+    prodTitle:   'Products',
+    prodSearch:  'Search...',
+    colProdName: 'Name',
+    colCat:      'Category',
+    colBrand:    'Brand',
+    colPrice:    'Price',
+    colStock:    'Stock',
+    colAction:   'Action',
+    noProds:     'No products found',
+    addTitle:    '➕ Add New Product',
+    lblName:     'Product Name *',
+    phName:      'e.g. Anker 20W Charger',
+    lblBrand:    'Brand',
+    lblPrice:    'Price (EGP) *',
+    phPrice:     '299',
+    lblOld:      'Old Price (EGP)',
+    phOld:       '350',
+    lblCat:      'Category',
+    lblStock:    'Stock',
+    lblImg:      'Image URL',
+    phImg:       'https://...',
+    lblDesc:     'Description',
+    phDesc:      'Brief description...',
+    saveBtn:     '💾 Save Product',
+    delBtn:      'Delete',
+    delConfirm:  'Delete this product?',
+    toastUpdated:s=>'✅ Status updated to: '+s,
+    toastDeleted:'✅ Deleted successfully',
+    toastSaved:  '✅ Product saved',
+    errDel:      '❌ Delete failed',
+    errUpdate:   '❌ Update failed',
+    errSave:     '❌ An error occurred',
+    errFields:   '⚠️ Name and price are required',
+    newOrder:    n=>'🔔 '+n+' new order(s) arrived!',
+    lastUpdated: t=>'Last updated: '+t,
+    langFlag:'🇸🇦', langLabel:'AR',
+    catPlaceholder:'Choose...',
+  }
+};
+
+let currentLang = localStorage.getItem('harir_admin_lang') || 'ar';
+function t(key, ...args){
+  const val = T[currentLang][key];
+  return typeof val==='function' ? val(...args) : (val ?? T.ar[key]);
+}
+
+function applyAdminLang(){
+  const lang = currentLang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = lang==='ar' ? 'rtl' : 'ltr';
+  document.title = lang==='ar' ? 'حرير — لوحة الإدارة' : 'Harir — Admin Panel';
+
+  const flag = document.getElementById('langFlag');
+  const lbl  = document.getElementById('langLabel');
+  if(flag) flag.textContent = t('langFlag');
+  if(lbl)  lbl.textContent  = t('langLabel');
+
+  // login box
+  const loginP = document.querySelector('.login-box p');
+  if(loginP) loginP.textContent = t('loginTitle');
+  const emailLbl = document.querySelector('.form-group:nth-child(1) label');
+  if(emailLbl) emailLbl.textContent = t('emailLbl');
+  const passLbl = document.querySelector('.form-group:nth-child(2) label');
+  if(passLbl) passLbl.textContent = t('passLbl');
+  const loginBtnEl = document.getElementById('loginBtn');
+  if(loginBtnEl) loginBtnEl.textContent = t('loginBtn');
+
+  // sidebar nav
+  const navItems = document.querySelectorAll('.nav-item[data-tab]');
+  const navKeys = ['navDash','navOrders','navProducts','navAdd'];
+  navItems.forEach((el,i)=>{ if(navKeys[i]) el.textContent = t(navKeys[i]); });
+  const logoutEl = document.getElementById('logoutBtn');
+  if(logoutEl) logoutEl.textContent = t('navLogout');
+
+  // page titles map
+  const currentTab = document.querySelector('.nav-item.active')?.dataset?.tab || 'dashboard';
+  const pageTitle = document.getElementById('pageTitle');
+  if(pageTitle) pageTitle.textContent = t('pageTitle')[currentTab] || '';
+
+  // stats labels
+  const statLabels = document.querySelectorAll('.stat-card .label');
+  const statKeys = ['statOrders','statPending','statRevenue','statProds'];
+  statLabels.forEach((el,i)=>{ if(statKeys[i]) el.textContent = t(statKeys[i]); });
+
+  // recent orders title
+  const recentTitle = document.querySelector('#tab-dashboard .table-head h3');
+  if(recentTitle) recentTitle.textContent = t('recentTitle');
+
+  // orders tab
+  const ordersTitle = document.querySelector('#tab-orders .table-head h3');
+  if(ordersTitle) ordersTitle.textContent = t('allOrders');
+  const orderSearch = document.getElementById('orderSearch');
+  if(orderSearch) orderSearch.placeholder = t('searchPh');
+
+  // filter bar labels
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const filterKeys = ['filterAll','filterPend','filterConf','filterShip','filterDel','filterCanc'];
+  filterBtns.forEach((btn,i)=>{
+    if(!filterKeys[i]) return;
+    const count = btn.querySelector('.count');
+    btn.childNodes[0].textContent = t(filterKeys[i])+' ';
+    // preserve count span
+    if(count) btn.appendChild(count);
+  });
+
+  // live bar
+  const liveSpan = document.querySelector('.live-bar span:nth-child(2)');
+  if(liveSpan) liveSpan.textContent = t('liveAuto');
+  const refreshBtn = document.querySelector('.live-bar button');
+  if(refreshBtn) refreshBtn.textContent = t('refreshNow');
+
+  // products tab
+  const prodTitle = document.querySelector('#tab-products .table-head h3');
+  if(prodTitle) prodTitle.textContent = t('prodTitle');
+  const prodSearch = document.getElementById('productSearch');
+  if(prodSearch) prodSearch.placeholder = t('prodSearch');
+
+  // add product form
+  const addTitle = document.querySelector('#tab-add-product h3');
+  if(addTitle) addTitle.textContent = t('addTitle');
+  const form2Labels = document.querySelectorAll('.form-group2 label');
+  const formKeys = ['lblName','lblBrand','lblPrice','lblOld','lblCat','lblStock','lblImg','lblDesc'];
+  form2Labels.forEach((el,i)=>{ if(formKeys[i]) el.textContent = t(formKeys[i]); });
+  const pName = document.getElementById('pName');  if(pName) pName.placeholder = t('phName');
+  const pPrice= document.getElementById('pPrice'); if(pPrice) pPrice.placeholder = t('phPrice');
+  const pOld  = document.getElementById('pOld');   if(pOld) pOld.placeholder = t('phOld');
+  const pImg  = document.getElementById('pImg');   if(pImg) pImg.placeholder = t('phImg');
+  const pDesc = document.getElementById('pDesc');  if(pDesc) pDesc.placeholder = t('phDesc');
+  const saveBtnEl = document.getElementById('saveProduct');
+  if(saveBtnEl) saveBtnEl.textContent = t('saveBtn');
+
+  // re-render tables to update column headers & labels
+  renderOrdersTable('recentOrdersTable', allOrders.slice(0,8));
+  renderOrdersTable('ordersTable', currentFilter==='all' ? allOrders : allOrders.filter(o=>o.status===currentFilter));
+  renderProductsTable(allProds);
+
+  localStorage.setItem('harir_admin_lang', lang);
+}
+
+function toggleLang(){
+  currentLang = currentLang==='ar' ? 'en' : 'ar';
+  applyAdminLang();
+}
 
 // INIT
 checkAuth();
