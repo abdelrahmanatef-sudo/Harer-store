@@ -415,7 +415,7 @@ tr:hover td{background:var(--bg)}
           <div class="live-bar">
             <div class="live-dot"></div>
             <span>تحديث تلقائي</span>
-            <span class="live-countdown" id="liveCountdown">30 ث</span>
+            <span class="live-countdown" id="liveCountdown">30s</span>
             <span id="lastUpdated" style="margin-right:8px"></span>
             <button onclick="forceRefresh()" style="padding:3px 10px;border-radius:6px;border:1px solid var(--silver);background:var(--bg);color:var(--fg2);font-size:11px;cursor:pointer">🔄 تحديث الآن</button>
           </div>
@@ -580,7 +580,7 @@ function startLiveRefresh(){
   refreshTimer = setInterval(async ()=>{
     countdown--;
     const el = document.getElementById('liveCountdown');
-    if(el) el.textContent = countdown + ' ث';
+    if(el) el.textContent = countdown + (currentLang==='ar' ? ' ث' : 's');
     if(countdown<=0){
       countdown=30;
       await refreshOrders();
@@ -591,7 +591,7 @@ function startLiveRefresh(){
 async function forceRefresh(){
   countdown=30;
   const el = document.getElementById('liveCountdown');
-  if(el) el.textContent='30 ث';
+  if(el) el.textContent='30' + (currentLang==='ar' ? ' ث' : 's');
   await refreshOrders();
 }
 
@@ -606,7 +606,7 @@ async function refreshOrders(){
   }
   const now = new Date();
   const el = document.getElementById('lastUpdated');
-  if(el) el.textContent = t('lastUpdated', now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}));
+  if(el) el.textContent = t('lastUpdated', now.toLocaleTimeString(currentLang==='ar'?'ar-EG':'en-US',{hour:'2-digit',minute:'2-digit'}));
 }
 
 function playNotification(){
