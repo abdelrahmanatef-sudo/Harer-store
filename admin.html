@@ -445,10 +445,7 @@ tr:hover td{background:var(--bg)}
             </div>
             <div class="form-group2">
               <label>الماركة</label>
-              <select id="pBrand">
-                <option>Anker</option><option>Apple</option>
-                <option>Samsung</option><option>ThreeTech</option><option>أخرى</option>
-              </select>
+              <select id="pBrand"></select>
             </div>
           </div>
           <div class="form-row">
@@ -1078,6 +1075,21 @@ function applyAdminLang(){
   const pDesc = document.getElementById('pDesc');  if(pDesc) pDesc.placeholder = t('phDesc');
   const saveBtnEl = document.getElementById('saveProduct');
   if(saveBtnEl) saveBtnEl.textContent = t('saveBtn');
+
+  // brand dropdown
+  const pBrand = document.getElementById('pBrand');
+  if(pBrand){
+    const cur = pBrand.value;
+    const otherLabel = lang==='ar' ? 'أخرى' : 'Other';
+    pBrand.innerHTML = ['Anker','Apple','Samsung','3TECH',otherLabel].map(b=>`<option value="${b}">${b}</option>`).join('');
+    if(cur) pBrand.value = cur;
+  }
+  // category dropdown placeholder
+  const pCat = document.getElementById('pCat');
+  if(pCat){
+    const firstOpt = pCat.querySelector('option[value=""]');
+    if(firstOpt) firstOpt.textContent = lang==='ar' ? 'اختر...' : 'Choose...';
+  }
 
   // re-render tables to update column headers & labels
   renderOrdersTable('recentOrdersTable', allOrders.slice(0,8));
