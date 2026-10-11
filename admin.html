@@ -469,8 +469,16 @@ tr:hover td{background:var(--bg)}
             </div>
           </div>
           <div class="form-group2">
-            <label>رابط الصورة</label>
-            <input type="url" id="pImg" placeholder="https://...">
+            <label id="lblImg">رابط الصورة</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="url" id="pImg" placeholder="https://..." style="flex:1">
+              <label for="pImgFile" id="uploadImgBtn" style="cursor:pointer;background:var(--cyan);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;white-space:nowrap">📤 رفع صورة</label>
+              <input type="file" id="pImgFile" accept="image/*" style="display:none">
+            </div>
+            <div id="imgPreview" style="display:none;margin-top:8px">
+              <img id="imgPreviewEl" style="max-width:120px;max-height:120px;border-radius:8px;border:2px solid var(--cyan)">
+              <span id="imgUploadStatus" style="font-size:12px;color:var(--fg3);margin-right:8px"></span>
+            </div>
           </div>
           <div class="form-group2">
             <label>الوصف</label>
@@ -725,6 +733,29 @@ function renderOrdersTable(targetId, orders){
   // track shown ids
   lastOrderIds = new Set(orders.map(o=>o.id));
 }
+
+// ════════════════════════════════
+// 📤  IMAGE UPLOAD
+// ════════════════════════════════
+document.getElementById('pImgFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('imgUploadStatus');
+  const preview = document.getElementById('imgPreview');
+  const previewEl = document.getElementById('imgPreviewEl');
+  status.textContent = currentLang==='ar' ? 'جاري الرفع...' : 'Uploading...';
+  preview.style.display = 'flex';
+  preview.style.alignItems = 'center';
+  // show local preview immediately
+  previewEl.src = URL.createObjectURL(file);
+  // upload to supabase storage
+  const fileName = `${Date.now()}-${file.name.replace(/\s/g,'_')}`;
+  const { data, error } = await sb.storage.from('products').upload(fileName, file, { upsert: true });
+  if(error){ status.textContent = '❌ ' + error.message; return; }
+  const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
+  document.getElementById('pImg').value = urlData.publicUrl;
+  status.textContent = currentLang==='ar' ? '✅ تم الرفع' : '✅ Uploaded';
+});
 
 function sendWhatsApp(phone, orderNum, total, name){
   const cleanPhone = phone.replace(/^0/, '20');
