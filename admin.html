@@ -716,7 +716,7 @@ function renderOrdersTable(targetId, orders){
           ${Object.entries(getStatusLabels()).map(([s,l])=>`
             <button class="s-btn ${s}${o.status===s?' active':''}" onclick="updateStatus('${o.id}','${s}',this)">${l}</button>
           `).join('')}
-          <button class="s-btn" style="background:#25D366;color:#fff;border:none" onclick="sendWhatsApp('${o.customer_phone}','${o.order_number}',${o.total},'${o.customer_name}')">💬 واتساب</button>
+          <button class="s-btn" style="background:#25D366;color:#fff;border:none" onclick="sendWhatsApp('${o.customer_phone}','${o.order_number}',${o.total},'${o.customer_name}')">${currentLang==='ar'?'💬 واتساب':'💬 WhatsApp'}</button>
         </div>
       </td>
     </tr>`).join('')}
