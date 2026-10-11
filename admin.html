@@ -716,6 +716,7 @@ function renderOrdersTable(targetId, orders){
           ${Object.entries(getStatusLabels()).map(([s,l])=>`
             <button class="s-btn ${s}${o.status===s?' active':''}" onclick="updateStatus('${o.id}','${s}',this)">${l}</button>
           `).join('')}
+          <button class="s-btn" style="background:#25D366;color:#fff;border:none" onclick="sendWhatsApp('${o.customer_phone}','${o.order_number}',${o.total},'${o.customer_name}')">💬 واتساب</button>
         </div>
       </td>
     </tr>`).join('')}
@@ -723,6 +724,14 @@ function renderOrdersTable(targetId, orders){
   </table></div>`;
   // track shown ids
   lastOrderIds = new Set(orders.map(o=>o.id));
+}
+
+function sendWhatsApp(phone, orderNum, total, name){
+  const cleanPhone = phone.replace(/^0/, '20');
+  const msgAr = `مرحباً يا ${name} 👋\nطلبك رقم *${orderNum}* بمبلغ *${total} ج.م* تم استلامه بنجاح ✅\nسنتواصل معك قريباً لتأكيد الطلب وترتيب التوصيل.\nشكراً لثقتك في حرير 🙏`;
+  const msgEn = `Hello ${name} 👋\nYour order *${orderNum}* for *${total} EGP* has been received ✅\nWe will contact you soon to confirm and arrange delivery.\nThank you for shopping at Harir 🙏`;
+  const msg = encodeURIComponent(currentLang==='ar' ? msgAr : msgEn);
+  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
 }
 
 function renderProductsTable(prods){
