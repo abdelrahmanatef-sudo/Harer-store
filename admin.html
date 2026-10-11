@@ -290,6 +290,15 @@ tr:hover td{background:var(--bg)}
   .form-row{grid-template-columns:1fr}
   .content{padding-bottom:80px}
 }
+/* Products table — mobile: hide Brand & Stock columns, keep Name/Cat/Price/Action */
+@media(max-width:640px){
+  .prod-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .prod-table-wrap table{min-width:0;width:100%}
+  .prod-col-brand,.prod-col-stock{display:none}
+  .prod-table-wrap td,.prod-table-wrap th{padding:10px 8px;font-size:13px}
+  .action-row{flex-direction:column;gap:4px}
+  .action-btn{font-size:12px;padding:5px 10px;width:100%}
+}
 </style>
 </head>
 <body>
@@ -832,14 +841,21 @@ function sendWhatsApp(phone, orderNum, total, name){
 function renderProductsTable(prods){
   const wrap = document.getElementById('productsTable');
   if(!prods.length){ wrap.innerHTML=`<p style="padding:24px;color:var(--fg3)">${t('noProds')}</p>`; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr><th>${t('colProdName')}</th><th>${t('colCat')}</th><th>${t('colBrand')}</th><th>${t('colPrice')}</th><th>${t('colStock')}</th><th>${t('colAction')}</th></tr></thead>
+  wrap.innerHTML = `<div class="prod-table-wrap"><table>
+    <thead><tr>
+      <th>${t('colProdName')}</th>
+      <th>${t('colCat')}</th>
+      <th class="prod-col-brand">${t('colBrand')}</th>
+      <th>${t('colPrice')}</th>
+      <th class="prod-col-stock">${t('colStock')}</th>
+      <th>${t('colAction')}</th>
+    </tr></thead>
     <tbody>${prods.map(p=>`<tr>
-      <td style="font-weight:700">${escHtml(p.name)}</td>
+      <td style="font-weight:700;max-width:140px;word-break:break-word">${escHtml(p.name)}</td>
       <td>${p.categories?.name||'—'}</td>
-      <td>${p.brand||'—'}</td>
-      <td>${parseFloat(p.price).toLocaleString(currentLang==='ar'?'ar-EG':'en-US')} ${t('currency')}</td>
-      <td>${p.stock??0}</td>
+      <td class="prod-col-brand">${p.brand||'—'}</td>
+      <td style="white-space:nowrap">${parseFloat(p.price).toLocaleString(currentLang==='ar'?'ar-EG':'en-US')} ${t('currency')}</td>
+      <td class="prod-col-stock">${p.stock??0}</td>
       <td>
         <div class="action-row">
           <button class="action-btn" style="background:var(--cyan);color:#fff" onclick="editProduct('${p.id}')">${t('editBtn')}</button>
@@ -848,7 +864,7 @@ function renderProductsTable(prods){
       </td>
     </tr>`).join('')}
     </tbody>
-  </table>`;
+  </table></div>`;
 }
 
 // ════════════════════════════════
