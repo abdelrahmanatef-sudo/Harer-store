@@ -993,7 +993,7 @@ function applyLang(){
   document.title = lang==='ar' ? 'حرير — اكسسوارات الموبايل الأصلية' : 'Harir — Original Mobile Accessories';
 
   // header
-  const logoSub = document.querySelector('.logo-text span');
+  const logoSub = document.querySelector('.logo-text span:last-child');
   if(logoSub) logoSub.textContent = t('logoSub');
   const si = document.getElementById('searchInput');
   if(si) si.placeholder = t('searchPh');
