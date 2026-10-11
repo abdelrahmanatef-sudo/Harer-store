@@ -690,7 +690,9 @@ async function loadCatsForForm(){
 // 🖼️  RENDER TABLES
 // ════════════════════════════════
 function statusBadge(s){
-  const labels = { pending:'في الانتظار', confirmed:'مؤكد', shipped:'جاري التوصيل', delivered:'تم التسليم', cancelled:'ملغي' };
+  const labelsAr = { pending:'في الانتظار', confirmed:'مؤكد', shipped:'جاري التوصيل', delivered:'تم التسليم', cancelled:'ملغي' };
+  const labelsEn = { pending:'Pending', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' };
+  const labels = currentLang==='ar' ? labelsAr : labelsEn;
   return `<span class="status ${s}">${labels[s]||s}</span>`;
 }
 
