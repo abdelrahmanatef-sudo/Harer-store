@@ -455,7 +455,12 @@ tr:hover td{background:var(--bg)}
             <input type="date" id="dateTo" title="إلى" onchange="applyDateFilter('custom')">
             <button class="reset-filters-btn" onclick="resetOrderFilters()">✕ إعادة تعيين</button>
           </div>
-          <div class="filter-summary" id="orderFilterSummary"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px 2px;flex-wrap:wrap;gap:8px">
+            <div class="filter-summary" id="orderFilterSummary" style="padding:0"></div>
+            <button onclick="exportOrdersExcel()" id="exportOrdersBtn" style="padding:7px 16px;border-radius:8px;border:1.5px solid #1D6F42;background:transparent;color:#1D6F42;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;display:flex;align-items:center;gap:6px;transition:all .2s" onmouseover="this.style.background='#1D6F42';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#1D6F42'">
+              📊 تصدير Excel
+            </button>
+          </div>
           <!-- LIVE BAR -->
           <div class="live-bar">
             <div class="live-dot"></div>
@@ -862,6 +867,61 @@ function resetOrderFilters(){
   const df=document.getElementById('dateFrom'); const dt=document.getElementById('dateTo');
   if(df) df.value=''; if(dt) dt.value='';
   applyFilter('all');
+}
+
+// ── Export Excel (CSV) ──
+function exportOrdersExcel(){
+  // get currently displayed orders
+  const q = document.getElementById('orderSearch').value.toLowerCase();
+  let rows = currentFilter==='all' ? allOrders : allOrders.filter(o=>o.status===currentFilter);
+  if(q) rows = rows.filter(o=>
+    o.customer_name?.toLowerCase().includes(q)||
+    o.customer_phone?.includes(q)||
+    o.order_number?.toLowerCase().includes(q)
+  );
+  rows = applyDateToOrders(rows);
+
+  if(!rows.length){ toast(currentLang==='ar'?'لا توجد بيانات للتصدير':'No data to export'); return; }
+
+  const statusLabels = { pending:'في الانتظار', confirmed:'مؤكد', shipped:'جاري التوصيل', delivered:'تم التسليم', cancelled:'ملغي' };
+  const statusLabelsEn = { pending:'Pending', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' };
+
+  // headers
+  const isAr = currentLang==='ar';
+  const headers = isAr
+    ? ['رقم الطلب','اسم العميل','الهاتف','المحافظة','المنطقة','الإجمالي (ج.م)','الحالة','التاريخ']
+    : ['Order #','Customer','Phone','Governorate','District','Total (EGP)','Status','Date'];
+
+  const escCSV = v => {
+    const s = String(v??'');
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+
+  const dataRows = rows.map(o=>[
+    o.order_number||'',
+    o.customer_name||'',
+    o.customer_phone||'',
+    o.customer_governorate||'',
+    o.customer_district||'',
+    parseFloat(o.total||0).toFixed(2),
+    isAr ? (statusLabels[o.status]||o.status) : (statusLabelsEn[o.status]||o.status),
+    new Date(o.created_at).toLocaleDateString('en-GB'),
+  ].map(escCSV).join(','));
+
+  // BOM for Arabic Excel support
+  const bom = '﻿';
+  const csv = bom + [headers.join(','), ...dataRows].join('\r\n');
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const now  = new Date();
+  const stamp= `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  a.href = url;
+  a.download = `harir-orders-${stamp}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(isAr ? `✅ تم تصدير ${rows.length} طلب` : `✅ Exported ${rows.length} orders`);
 }
 
 // ── Product filters ──
