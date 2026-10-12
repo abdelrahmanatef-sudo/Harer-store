@@ -558,7 +558,7 @@ tr:hover td{background:var(--bg)}
 </div>
 
 <!-- ✏️ Edit Product Modal -->
-<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;padding:20px">
+<div id="editModal" onclick="if(event.target===this)closeEditModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;padding:20px">
   <div style="background:var(--bg2);border-radius:16px;max-width:540px;margin:auto;padding:24px;position:relative">
     <button onclick="closeEditModal()" style="position:absolute;top:12px;left:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--fg3)">✕</button>
     <h3 id="editModalTitle" style="margin:0 0 20px;font-size:18px;color:var(--cyan)">✏️ تعديل المنتج</h3>
@@ -604,7 +604,7 @@ tr:hover td{background:var(--bg)}
       <div style="display:flex;gap:8px;align-items:center">
         <input type="url" id="editImg" placeholder="https://..." style="flex:1">
         <label for="editImgFile" id="editUploadBtn" style="cursor:pointer;background:var(--cyan);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;white-space:nowrap">📤 رفع</label>
-        <input type="file" id="editImgFile" accept="image/*" style="display:none">
+        <input type="file" id="editImgFile" accept="image/*" style="display:none" onchange="uploadEditImage(this.files[0])">
       </div>
       <div id="editImgPreview" style="display:none;margin-top:8px">
         <img id="editImgPreviewEl" style="max-width:120px;max-height:120px;border-radius:8px;border:2px solid var(--cyan)">
@@ -615,7 +615,7 @@ tr:hover td{background:var(--bg)}
       <label id="editLblDesc">الوصف</label>
       <textarea id="editDesc" placeholder="وصف مختصر..."></textarea>
     </div>
-    <button class="save-btn" id="saveEditProduct" style="margin-top:8px">💾 حفظ التعديل</button>
+    <button class="save-btn" id="saveEditProduct" onclick="saveEditProduct()" style="margin-top:8px">💾 حفظ التعديل</button>
   </div>
 </div>
 
@@ -703,7 +703,7 @@ document.getElementById('bnavLogout').addEventListener('click', async ()=>{
 // ════════════════════════════════
 // 📊  LOAD DATA + LIVE REFRESH
 // ════════════════════════════════
-let allOrders=[], allProds=[], allCats=[], currentFilter='all', currentDateFilter='all', refreshTimer=null, countdown=30, lastOrderIds=new Set();
+let allOrders=[], allProds=[], allCats=[], currentEditId=null, currentFilter='all', currentDateFilter='all', refreshTimer=null, countdown=30, lastOrderIds=new Set();
 
 async function loadAll(){
   await Promise.all([loadDashboard(), loadOrders(), loadProducts(), loadCatsForForm()]);
@@ -1050,56 +1050,73 @@ async function deleteProduct(id){
 // ✏️  EDIT PRODUCT
 // ════════════════════════════════
 async function editProduct(id){
+  // fetch fresh from allProds cache
   const p = allProds.find(x=>String(x.id)===String(id));
-  if(!p) return;
+  if(!p){ toast('❌ لم يتم العثور على المنتج'); return; }
+  currentEditId = String(id);
 
-  // populate fields
+  // fill category select FIRST (rebuild it)
+  const editCatEl = document.getElementById('editCat');
+  editCatEl.innerHTML = `<option value="">${t('catPlaceholder')}</option>`;
+  allCats.forEach(c=>{
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name;
+    editCatEl.appendChild(o);
+  });
+
+  // populate all fields
   document.getElementById('editId').value    = p.id;
   document.getElementById('editName').value  = p.name||'';
   document.getElementById('editBrand').value = p.brand||'';
   document.getElementById('editPrice').value = p.price||'';
   document.getElementById('editOld').value   = p.old_price||'';
-  document.getElementById('editCat').value   = p.category_id||'';
+  editCatEl.value                            = p.category_id||'';
   document.getElementById('editStock').value = p.stock??0;
   document.getElementById('editImg').value   = p.image_url||'';
   document.getElementById('editDesc').value  = p.description||'';
 
-  // show image preview if exists
-  const prev = document.getElementById('editImgPreview');
+  // image preview
+  const prev   = document.getElementById('editImgPreview');
   const prevEl = document.getElementById('editImgPreviewEl');
-  if(p.image_url){ prev.style.display='flex'; prev.style.alignItems='center'; prevEl.src=p.image_url; }
-  else { prev.style.display='none'; }
+  const statusEl = document.getElementById('editImgStatus');
+  statusEl.textContent = '';
+  if(p.image_url){
+    prevEl.src = p.image_url;
+    prev.style.display = 'flex';
+    prev.style.alignItems = 'center';
+  } else {
+    prev.style.display = 'none';
+  }
 
-  // fill category select
-  const editCatEl = document.getElementById('editCat');
-  editCatEl.innerHTML = `<option value="">${t('catPlaceholder')}</option>`;
-  allCats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; editCatEl.appendChild(o); });
-  editCatEl.value = p.category_id||'';
+  // reset file input so same file can be re-selected
+  document.getElementById('editImgFile').value = '';
 
-  // translate modal labels
-  document.getElementById('editModalTitle').textContent = t('editTitle');
+  // labels
+  document.getElementById('editModalTitle').textContent  = t('editTitle');
   document.getElementById('saveEditProduct').textContent = t('editSaveBtn');
 
-  document.getElementById('editModal').style.display='block';
-  document.body.style.overflow='hidden';
+  // show modal
+  document.getElementById('editModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
 }
 
 function closeEditModal(){
-  document.getElementById('editModal').style.display='none';
-  document.body.style.overflow='';
-  document.getElementById('editImgPreview').style.display='none';
-  document.getElementById('editImgStatus').textContent='';
+  document.getElementById('editModal').style.display = 'none';
+  document.body.style.overflow = '';
+  currentEditId = null;
 }
 
-document.getElementById('editModal').addEventListener('click', e=>{
-  if(e.target===document.getElementById('editModal')) closeEditModal();
-});
-
-document.getElementById('saveEditProduct').addEventListener('click', async ()=>{
-  const id    = document.getElementById('editId').value;
+async function saveEditProduct(){
+  const id    = currentEditId;
   const name  = document.getElementById('editName').value.trim();
   const price = parseFloat(document.getElementById('editPrice').value);
+  if(!id)          { toast('❌ خطأ: لا يوجد منتج محدد'); return; }
   if(!name||!price){ toast(t('errFields')); return; }
+
+  const btn = document.getElementById('saveEditProduct');
+  btn.disabled = true;
+  btn.textContent = currentLang==='ar' ? '⏳ جاري الحفظ...' : '⏳ Saving...';
 
   const { error } = await sb.from('products').update({
     name,
@@ -1112,27 +1129,32 @@ document.getElementById('saveEditProduct').addEventListener('click', async ()=>{
     description: document.getElementById('editDesc').value||null,
   }).eq('id', id);
 
-  if(error){ toast(t('errEdit')); console.error(error); }
-  else { toast(t('toastEdited')); closeEditModal(); loadProducts(); }
-});
+  btn.disabled = false;
+  btn.textContent = t('editSaveBtn');
 
-// Image upload for edit modal
-document.getElementById('editImgFile').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
+  if(error){ toast(t('errEdit')); console.error('Edit error:', error); }
+  else { toast(t('toastEdited')); closeEditModal(); loadProducts(); }
+}
+
+async function uploadEditImage(file){
   const status  = document.getElementById('editImgStatus');
   const prev    = document.getElementById('editImgPreview');
   const prevEl  = document.getElementById('editImgPreviewEl');
-  status.textContent = currentLang==='ar' ? 'جاري الرفع...' : 'Uploading...';
-  prev.style.display='flex'; prev.style.alignItems='center';
+
+  status.textContent = currentLang==='ar' ? '⏳ جاري الرفع...' : '⏳ Uploading...';
+  prev.style.display = 'flex';
+  prev.style.alignItems = 'center';
   prevEl.src = URL.createObjectURL(file);
-  const fileName = `${Date.now()}-${file.name.replace(/\s/g,'_')}`;
+
+  const fileName = `prod-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
   const { error } = await sb.storage.from('products').upload(fileName, file, { upsert: true });
   if(error){ status.textContent = '❌ ' + error.message; return; }
+
   const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
-  document.getElementById('editImg').value = urlData.publicUrl;
+  const publicUrl = urlData?.publicUrl || `${SUPABASE_URL}/storage/v1/object/public/products/${fileName}`;
+  document.getElementById('editImg').value = publicUrl;
   status.textContent = currentLang==='ar' ? '✅ تم الرفع' : '✅ Uploaded';
-});
+}
 
 document.getElementById('saveProduct').addEventListener('click', async ()=>{
   const name  = document.getElementById('pName').value.trim();
