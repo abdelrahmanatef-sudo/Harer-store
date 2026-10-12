@@ -187,6 +187,29 @@ tr:hover td{background:var(--bg)}
 }
 .filter-btn.active .count{background:rgba(0,0,0,.15)}
 
+/* ADVANCED FILTER ROW */
+.adv-filter-row{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  padding:10px 16px;border-bottom:1px solid var(--silver);background:var(--bg);
+}
+.adv-filter-row select,.adv-filter-row input[type=date]{
+  padding:6px 10px;border-radius:8px;border:1.5px solid var(--silver);
+  background:var(--bg2);color:var(--fg);font-size:13px;cursor:pointer;
+  font-family:'Cairo',sans-serif;
+}
+.adv-filter-row select:focus,.adv-filter-row input[type=date]:focus{
+  outline:none;border-color:var(--cyan);
+}
+.reset-filters-btn{
+  padding:6px 12px;border-radius:8px;border:1.5px solid var(--silver);
+  background:transparent;color:var(--fg3);font-size:12px;cursor:pointer;
+  font-family:'Cairo',sans-serif;transition:all .2s;
+}
+.reset-filters-btn:hover{border-color:#ff4757;color:#ff4757}
+.filter-summary{
+  font-size:12px;color:var(--fg3);padding:4px 16px 8px;
+}
+
 /* LIVE INDICATOR */
 .live-bar{
   display:flex;align-items:center;gap:10px;
@@ -409,7 +432,7 @@ tr:hover td{background:var(--bg)}
             <h3>جميع الطلبات</h3>
             <input class="search-input" id="orderSearch" placeholder="بحث بالاسم أو الهاتف...">
           </div>
-          <!-- FILTER BAR -->
+          <!-- STATUS FILTER BAR -->
           <div style="padding:12px 16px;border-bottom:1px solid var(--silver)">
             <div class="filter-bar" id="filterBar">
               <button class="filter-btn active" data-filter="all">الكل <span class="count" id="fc-all">0</span></button>
@@ -420,6 +443,19 @@ tr:hover td{background:var(--bg)}
               <button class="filter-btn" data-filter="cancelled">ملغي <span class="count" id="fc-cancelled">0</span></button>
             </div>
           </div>
+          <!-- DATE FILTER ROW -->
+          <div class="adv-filter-row" id="orderDateFilterRow">
+            <span style="font-size:13px;font-weight:600;color:var(--fg2)" id="lbl-date-filter">📅 التاريخ:</span>
+            <button class="filter-btn active" data-date="all" id="dateFilterBar" onclick="applyDateFilter('all')" style="padding:5px 12px;font-size:12px">الكل</button>
+            <button class="filter-btn" data-date="today" onclick="applyDateFilter('today')" style="padding:5px 12px;font-size:12px">النهارده</button>
+            <button class="filter-btn" data-date="week" onclick="applyDateFilter('week')" style="padding:5px 12px;font-size:12px">هذا الأسبوع</button>
+            <button class="filter-btn" data-date="month" onclick="applyDateFilter('month')" style="padding:5px 12px;font-size:12px">هذا الشهر</button>
+            <input type="date" id="dateFrom" title="من" onchange="applyDateFilter('custom')">
+            <span style="font-size:12px;color:var(--fg3)">—</span>
+            <input type="date" id="dateTo" title="إلى" onchange="applyDateFilter('custom')">
+            <button class="reset-filters-btn" onclick="resetOrderFilters()">✕ إعادة تعيين</button>
+          </div>
+          <div class="filter-summary" id="orderFilterSummary"></div>
           <!-- LIVE BAR -->
           <div class="live-bar">
             <div class="live-dot"></div>
@@ -436,8 +472,29 @@ tr:hover td{background:var(--bg)}
       <div id="tab-products" style="display:none">
         <div class="table-wrap">
           <div class="table-head">
-            <h3>المنتجات</h3>
+            <h3 id="prodTitle">المنتجات</h3>
             <input class="search-input" id="productSearch" placeholder="بحث...">
+          </div>
+          <!-- PRODUCT FILTER ROW -->
+          <div class="adv-filter-row" id="prodFilterRow">
+            <select id="filterCat" onchange="applyProdFilters()">
+              <option value="">🗂 كل الفئات</option>
+            </select>
+            <select id="filterBrand" onchange="applyProdFilters()">
+              <option value="">🏷 كل الماركات</option>
+              <option value="Anker">Anker</option>
+              <option value="Apple">Apple</option>
+              <option value="Samsung">Samsung</option>
+              <option value="3TECH">3TECH</option>
+            </select>
+            <select id="filterStock" onchange="applyProdFilters()">
+              <option value="">📦 كل المخزون</option>
+              <option value="instock">متاح</option>
+              <option value="lowstock">منخفض (≤5)</option>
+              <option value="outofstock">نفد</option>
+            </select>
+            <button class="reset-filters-btn" onclick="resetProdFilters()">✕ إعادة تعيين</button>
+            <span class="filter-summary" id="prodFilterSummary" style="padding:0;margin-right:auto"></span>
           </div>
           <div id="productsTable"></div>
         </div>
@@ -646,7 +703,7 @@ document.getElementById('bnavLogout').addEventListener('click', async ()=>{
 // ════════════════════════════════
 // 📊  LOAD DATA + LIVE REFRESH
 // ════════════════════════════════
-let allOrders=[], allProds=[], currentFilter='all', refreshTimer=null, countdown=30, lastOrderIds=new Set();
+let allOrders=[], allProds=[], allCats=[], currentFilter='all', currentDateFilter='all', refreshTimer=null, countdown=30, lastOrderIds=new Set();
 
 async function loadAll(){
   await Promise.all([loadDashboard(), loadOrders(), loadProducts(), loadCatsForForm()]);
@@ -747,19 +804,110 @@ function applyFilter(filter){
     o.customer_phone?.includes(q)||
     o.order_number?.toLowerCase().includes(q)
   );
+  // apply date filter on top
+  filtered = applyDateToOrders(filtered);
+  // update summary
+  const summary = document.getElementById('orderFilterSummary');
+  if(summary) summary.textContent = filtered.length < allOrders.length
+    ? (currentLang==='ar' ? `يظهر ${filtered.length} من ${allOrders.length} طلب` : `Showing ${filtered.length} of ${allOrders.length} orders`)
+    : '';
   renderOrdersTable('ordersTable', filtered);
+}
+
+// ── Date filter helpers ──
+function applyDateToOrders(orders){
+  const from = document.getElementById('dateFrom')?.value;
+  const to   = document.getElementById('dateTo')?.value;
+  if(currentDateFilter==='all' && !from && !to) return orders;
+  const now = new Date();
+  return orders.filter(o=>{
+    const d = new Date(o.created_at);
+    if(currentDateFilter==='today'){
+      return d.toDateString()===now.toDateString();
+    } else if(currentDateFilter==='week'){
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
+      return d>=weekAgo;
+    } else if(currentDateFilter==='month'){
+      return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    } else if(currentDateFilter==='custom'){
+      const f = from ? new Date(from) : null;
+      const t2 = to   ? new Date(to+'T23:59:59') : null;
+      if(f && d<f) return false;
+      if(t2 && d>t2) return false;
+      return true;
+    }
+    return true;
+  });
+}
+
+function applyDateFilter(range){
+  currentDateFilter = range;
+  // highlight date buttons
+  document.querySelectorAll('#orderDateFilterRow .filter-btn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-date')===range && range!=='custom');
+  });
+  if(range!=='custom'){
+    const df = document.getElementById('dateFrom');
+    const dt = document.getElementById('dateTo');
+    if(df) df.value=''; if(dt) dt.value='';
+  }
+  applyFilter(currentFilter);
+}
+
+function resetOrderFilters(){
+  currentDateFilter='all';
+  document.querySelectorAll('#orderDateFilterRow .filter-btn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-date')==='all');
+  });
+  const df=document.getElementById('dateFrom'); const dt=document.getElementById('dateTo');
+  if(df) df.value=''; if(dt) dt.value='';
+  applyFilter('all');
+}
+
+// ── Product filters ──
+function applyProdFilters(){
+  const cat   = document.getElementById('filterCat')?.value;
+  const brand = document.getElementById('filterBrand')?.value;
+  const stock = document.getElementById('filterStock')?.value;
+  const q     = document.getElementById('productSearch')?.value.toLowerCase()||'';
+  let res = allProds;
+  if(q)     res = res.filter(p=>p.name.toLowerCase().includes(q)||(p.brand||'').toLowerCase().includes(q));
+  if(cat)   res = res.filter(p=>String(p.category_id)===String(cat));
+  if(brand) res = res.filter(p=>p.brand===brand);
+  if(stock==='instock')   res = res.filter(p=>(p.stock??0)>5);
+  if(stock==='lowstock')  res = res.filter(p=>(p.stock??0)>0&&(p.stock??0)<=5);
+  if(stock==='outofstock')res = res.filter(p=>(p.stock??0)===0);
+  const summary = document.getElementById('prodFilterSummary');
+  if(summary) summary.textContent = (cat||brand||stock||q) && res.length<allProds.length
+    ? (currentLang==='ar' ? `${res.length} من ${allProds.length} منتج` : `${res.length} of ${allProds.length} products`)
+    : '';
+  renderProductsTable(res);
+}
+
+function resetProdFilters(){
+  const fc=document.getElementById('filterCat');
+  const fb=document.getElementById('filterBrand');
+  const fs=document.getElementById('filterStock');
+  const ps=document.getElementById('productSearch');
+  if(fc) fc.value=''; if(fb) fb.value=''; if(fs) fs.value=''; if(ps) ps.value='';
+  applyProdFilters();
 }
 
 async function loadProducts(){
   const { data } = await sb.from('products').select('*, categories(name)').order('created_at',{ascending:false});
   allProds = data||[];
-  renderProductsTable(allProds);
+  applyProdFilters();
 }
 
 async function loadCatsForForm(){
   const { data } = await sb.from('categories').select('*');
+  allCats = data||[];
+  // populate add-product form select
   const sel = document.getElementById('pCat');
-  (data||[]).forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
+  allCats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
+  // populate product filter select
+  const fsel = document.getElementById('filterCat');
+  allCats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; fsel.appendChild(o); });
 }
 
 // ════════════════════════════════
@@ -1015,10 +1163,7 @@ document.getElementById('filterBar').addEventListener('click', e=>{
   if(btn) applyFilter(btn.dataset.filter);
 });
 
-document.getElementById('productSearch').addEventListener('input', e=>{
-  const q = e.target.value.toLowerCase();
-  renderProductsTable(allProds.filter(p=>p.name.toLowerCase().includes(q)||(p.brand||'').toLowerCase().includes(q)));
-});
+document.getElementById('productSearch').addEventListener('input', applyProdFilters);
 
 // ════════════════════════════════
 // 🍞  TOAST & UTILS
@@ -1310,10 +1455,34 @@ function applyAdminLang(){
     if(firstOpt) firstOpt.textContent = lang==='ar' ? 'اختر...' : 'Choose...';
   }
 
+  // date filter bar labels
+  const dateLbl = document.getElementById('lbl-date-filter');
+  if(dateLbl) dateLbl.textContent = lang==='ar' ? '📅 التاريخ:' : '📅 Date:';
+  const dateBtns = document.querySelectorAll('#orderDateFilterRow .filter-btn');
+  const dateLabelsAr = ['الكل','النهارده','هذا الأسبوع','هذا الشهر'];
+  const dateLabelsEn = ['All','Today','This Week','This Month'];
+  dateBtns.forEach((b,i)=>{ b.textContent = lang==='ar' ? dateLabelsAr[i] : dateLabelsEn[i]; });
+  const resetOrderBtn = document.querySelector('#orderDateFilterRow .reset-filters-btn');
+  if(resetOrderBtn) resetOrderBtn.textContent = lang==='ar' ? '✕ إعادة تعيين' : '✕ Reset';
+
+  // product filter selects
+  const fcatFirst = document.querySelector('#filterCat option[value=""]');
+  if(fcatFirst) fcatFirst.textContent = lang==='ar' ? '🗂 كل الفئات' : '🗂 All Categories';
+  const fbrandFirst = document.querySelector('#filterBrand option[value=""]');
+  if(fbrandFirst) fbrandFirst.textContent = lang==='ar' ? '🏷 كل الماركات' : '🏷 All Brands';
+  const fstockFirst = document.querySelector('#filterStock option[value=""]');
+  if(fstockFirst) fstockFirst.textContent = lang==='ar' ? '📦 كل المخزون' : '📦 All Stock';
+  const fstockOpts = document.querySelectorAll('#filterStock option:not([value=""])');
+  const stockLabelsAr = ['متاح','منخفض (≤5)','نفد'];
+  const stockLabelsEn = ['In Stock','Low (≤5)','Out of Stock'];
+  fstockOpts.forEach((o,i)=>{ o.textContent = lang==='ar' ? stockLabelsAr[i] : stockLabelsEn[i]; });
+  const resetProdBtn = document.querySelector('#prodFilterRow .reset-filters-btn');
+  if(resetProdBtn) resetProdBtn.textContent = lang==='ar' ? '✕ إعادة تعيين' : '✕ Reset';
+
   // re-render tables to update column headers & labels
   renderOrdersTable('recentOrdersTable', allOrders.slice(0,8));
-  renderOrdersTable('ordersTable', currentFilter==='all' ? allOrders : allOrders.filter(o=>o.status===currentFilter));
-  renderProductsTable(allProds);
+  applyFilter(currentFilter);
+  applyProdFilters();
 
   localStorage.setItem('harir_admin_lang', lang);
 }
