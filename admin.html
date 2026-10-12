@@ -313,6 +313,15 @@ tr:hover td{background:var(--bg)}
   .form-row{grid-template-columns:1fr}
   .content{padding-bottom:80px}
 }
+/* Dashboard grids — stack on mobile */
+@media(max-width:700px){
+  #tab-dashboard [style*="grid-template-columns:1fr 1fr"]{
+    display:block !important;
+  }
+  #tab-dashboard [style*="grid-template-columns:1fr 1fr"] > *{
+    margin-bottom:16px;
+  }
+}
 /* Products table — mobile: hide Brand & Stock columns, keep Name/Cat/Price/Action */
 @media(max-width:640px){
   .prod-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -413,14 +422,59 @@ tr:hover td{background:var(--bg)}
     <div class="content">
       <!-- DASHBOARD -->
       <div id="tab-dashboard">
+
+        <!-- TOP STATS ROW -->
         <div class="stats-row" id="statsRow">
-          <div class="stat-card"><div class="label">إجمالي الطلبات</div><div class="value" id="sOrders">—</div></div>
-          <div class="stat-card"><div class="label">في الانتظار</div><div class="value" id="sPending">—</div></div>
-          <div class="stat-card"><div class="label">إجمالي الإيرادات</div><div class="value" id="sRevenue">—</div><div class="sub">ج.م</div></div>
-          <div class="stat-card"><div class="label">عدد المنتجات</div><div class="value" id="sProducts">—</div></div>
+          <div class="stat-card"><div class="label" id="lbl-sOrders">إجمالي الطلبات</div><div class="value" id="sOrders">—</div></div>
+          <div class="stat-card"><div class="label" id="lbl-sPending">في الانتظار</div><div class="value" id="sPending">—</div></div>
+          <div class="stat-card"><div class="label" id="lbl-sRevenue">إجمالي الإيرادات</div><div class="value" id="sRevenue">—</div><div class="sub">ج.م</div></div>
+          <div class="stat-card"><div class="label" id="lbl-sProducts">عدد المنتجات</div><div class="value" id="sProducts">—</div></div>
         </div>
+
+        <!-- ANALYTICS ROW -->
+        <div class="stats-row" style="margin-top:0">
+          <div class="stat-card" style="border-right:4px solid var(--cyan)"><div class="label" id="lbl-sToday">مبيعات النهارده</div><div class="value" id="sToday">—</div><div class="sub">ج.م</div></div>
+          <div class="stat-card" style="border-right:4px solid #a855f7"><div class="label" id="lbl-sMonth">مبيعات الشهر</div><div class="value" id="sMonth">—</div><div class="sub">ج.م</div></div>
+          <div class="stat-card" style="border-right:4px solid #f59e0b"><div class="label" id="lbl-sAvg">متوسط قيمة الأوردر</div><div class="value" id="sAvg">—</div><div class="sub">ج.م</div></div>
+          <div class="stat-card" style="border-right:4px solid #10b981"><div class="label" id="lbl-sDelivered">تم التسليم</div><div class="value" id="sDelivered">—</div><div class="sub" id="lbl-sDeliveredSub">من إجمالي الطلبات</div></div>
+        </div>
+
+        <!-- CHARTS + RANKINGS ROW -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+          <!-- Sales chart last 7 days -->
+          <div class="table-wrap" style="padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h3 id="lbl-chart7" style="margin:0;font-size:15px">📈 المبيعات (آخر 7 أيام)</h3>
+              <button onclick="exportSalesExcel()" style="padding:5px 12px;border-radius:7px;border:1.5px solid #1D6F42;background:transparent;color:#1D6F42;font-size:12px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif" id="exportSalesBtn">📊 Excel</button>
+            </div>
+            <canvas id="salesChart" height="180"></canvas>
+          </div>
+
+          <!-- Top products -->
+          <div class="table-wrap" style="padding:16px">
+            <h3 id="lbl-topProds" style="margin:0 0 12px;font-size:15px">🏆 أكتر المنتجات مبيعاً</h3>
+            <div id="topProductsList"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <!-- Top regions -->
+          <div class="table-wrap" style="padding:16px">
+            <h3 id="lbl-topRegions" style="margin:0 0 12px;font-size:15px">📍 أكتر المناطق طلباً</h3>
+            <div id="topRegionsList"></div>
+          </div>
+
+          <!-- Status breakdown -->
+          <div class="table-wrap" style="padding:16px">
+            <h3 id="lbl-statusBreak" style="margin:0 0 12px;font-size:15px">📊 توزيع الحالات</h3>
+            <div id="statusBreakdown"></div>
+          </div>
+        </div>
+
+        <!-- RECENT ORDERS -->
         <div class="table-wrap">
-          <div class="table-head"><h3>آخر الطلبات</h3></div>
+          <div class="table-head"><h3 id="lbl-recentOrders">آخر الطلبات</h3></div>
           <div id="recentOrdersTable"></div>
         </div>
       </div>
@@ -767,18 +821,290 @@ function playNotification(){
 }
 
 async function loadDashboard(){
-  const [{ count:oCount }, { data:orders }, { count:pCount }] = await Promise.all([
-    sb.from('orders').select('*',{count:'exact',head:true}),
-    sb.from('orders').select('*').order('created_at',{ascending:false}).limit(8),
-    sb.from('products').select('*',{count:'exact',head:true})
+  const isAr = currentLang==='ar';
+
+  // Fetch all orders + products count + order_items
+  const [{ data: allOrdersData }, { count: pCount }, { data: itemsData }] = await Promise.all([
+    sb.from('orders').select('*').order('created_at',{ascending:false}),
+    sb.from('products').select('*',{count:'exact',head:true}),
+    sb.from('order_items').select('*, products(name, image_url)')
   ]);
-  const pending  = (orders||[]).filter(o=>o.status==='pending').length;
-  const revenue  = (orders||[]).filter(o=>o.status!=='cancelled').reduce((s,o)=>s+parseFloat(o.total||0),0);
-  document.getElementById('sOrders').textContent   = oCount||0;
-  document.getElementById('sPending').textContent  = pending;
-  document.getElementById('sRevenue').textContent  = revenue.toLocaleString(currentLang==='ar'?'ar-EG':'en-US');
+
+  const orders = allOrdersData || [];
+  const items  = itemsData || [];
+
+  // ── KPI calculations ──
+  const validOrders = orders.filter(o=>o.status!=='cancelled');
+  const totalRevenue = validOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const pendingCount = orders.filter(o=>o.status==='pending').length;
+  const deliveredCount = orders.filter(o=>o.status==='delivered').length;
+
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const thisMonth = now.getMonth();
+  const thisYear  = now.getFullYear();
+
+  const todaySales = orders
+    .filter(o=>o.status!=='cancelled' && new Date(o.created_at).toDateString()===todayStr)
+    .reduce((s,o)=>s+parseFloat(o.total||0),0);
+
+  const monthSales = orders
+    .filter(o=>o.status!=='cancelled' && (()=>{ const d=new Date(o.created_at); return d.getMonth()===thisMonth && d.getFullYear()===thisYear; })())
+    .reduce((s,o)=>s+parseFloat(o.total||0),0);
+
+  const avgOrder = validOrders.length ? totalRevenue / validOrders.length : 0;
+
+  // ── Fill stat cards ──
+  const fmt = n => n.toLocaleString(isAr?'ar-EG':'en-US', {minimumFractionDigits:0,maximumFractionDigits:0});
+  document.getElementById('sOrders').textContent   = orders.length;
+  document.getElementById('sPending').textContent  = pendingCount;
+  document.getElementById('sRevenue').textContent  = fmt(totalRevenue);
   document.getElementById('sProducts').textContent = pCount||0;
-  renderOrdersTable('recentOrdersTable', orders||[]);
+  document.getElementById('sToday').textContent    = fmt(todaySales);
+  document.getElementById('sMonth').textContent    = fmt(monthSales);
+  document.getElementById('sAvg').textContent      = fmt(avgOrder);
+  document.getElementById('sDelivered').textContent= deliveredCount;
+  const subEl = document.getElementById('lbl-sDeliveredSub');
+  if(subEl) subEl.textContent = isAr
+    ? `من ${orders.length} طلب`
+    : `of ${orders.length} orders`;
+
+  // ── 7-day sales chart ──
+  const days7 = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(now);
+    d.setDate(d.getDate()-i);
+    days7.push(d);
+  }
+  const dayLabels = days7.map(d=>d.toLocaleDateString(isAr?'ar-EG':'en-GB',{weekday:'short',month:'numeric',day:'numeric'}));
+  const daySales  = days7.map(d=>{
+    const ds = d.toDateString();
+    return orders
+      .filter(o=>o.status!=='cancelled' && new Date(o.created_at).toDateString()===ds)
+      .reduce((s,o)=>s+parseFloat(o.total||0),0);
+  });
+  drawSalesChart(dayLabels, daySales);
+
+  // ── Top products (from order_items) ──
+  const prodMap = {};
+  items.forEach(it=>{
+    const pid = it.product_id;
+    if(!prodMap[pid]) prodMap[pid] = {
+      name: it.products?.name || (isAr?'منتج محذوف':'Deleted'),
+      img:  it.products?.image_url || '',
+      qty:  0, revenue: 0
+    };
+    prodMap[pid].qty     += (it.quantity||1);
+    prodMap[pid].revenue += parseFloat(it.price||0) * (it.quantity||1);
+  });
+  const topProds = Object.values(prodMap).sort((a,b)=>b.qty-a.qty).slice(0,5);
+  const topEl = document.getElementById('topProductsList');
+  if(topEl){
+    if(topProds.length===0){
+      topEl.innerHTML = `<p style="color:var(--fg3);font-size:13px;text-align:center;padding:16px">${isAr?'لا توجد بيانات بعد':'No data yet'}</p>`;
+    } else {
+      topEl.innerHTML = topProds.map((p,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--silver)">
+          <span style="font-weight:900;font-size:16px;color:var(--cyan);min-width:22px">${i+1}</span>
+          ${p.img?`<img src="${p.img}" style="width:36px;height:36px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:''}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+            <div style="font-size:12px;color:var(--fg3)">${p.qty} ${isAr?'قطعة':'units'} · ${fmt(p.revenue)} ${isAr?'ج.م':'EGP'}</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ── Top regions ──
+  const regionMap = {};
+  orders.forEach(o=>{
+    const gov = o.customer_governorate || (isAr?'غير محدد':'Unknown');
+    regionMap[gov] = (regionMap[gov]||0) + 1;
+  });
+  const topRegions = Object.entries(regionMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxReg = topRegions[0]?.[1] || 1;
+  const regEl = document.getElementById('topRegionsList');
+  if(regEl){
+    if(topRegions.length===0){
+      regEl.innerHTML = `<p style="color:var(--fg3);font-size:13px;text-align:center;padding:16px">${isAr?'لا توجد بيانات':'No data'}</p>`;
+    } else {
+      regEl.innerHTML = topRegions.map(([gov,cnt])=>`
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+            <span style="font-weight:600">${gov}</span>
+            <span style="color:var(--fg3)">${cnt} ${isAr?'طلب':'orders'}</span>
+          </div>
+          <div style="background:var(--silver);border-radius:99px;height:7px;overflow:hidden">
+            <div style="background:var(--cyan);height:100%;border-radius:99px;width:${Math.round(cnt/maxReg*100)}%;transition:width .5s"></div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ── Status breakdown ──
+  const statuses = ['pending','confirmed','shipped','delivered','cancelled'];
+  const statusLabels = {
+    pending: isAr?'في الانتظار':'Pending',
+    confirmed: isAr?'مؤكد':'Confirmed',
+    shipped: isAr?'جاري التوصيل':'Shipped',
+    delivered: isAr?'تم التسليم':'Delivered',
+    cancelled: isAr?'ملغي':'Cancelled'
+  };
+  const statusColors = {
+    pending:'#f59e0b', confirmed:'#3b82f6', shipped:'#a855f7',
+    delivered:'#10b981', cancelled:'#ef4444'
+  };
+  const sbEl = document.getElementById('statusBreakdown');
+  if(sbEl){
+    sbEl.innerHTML = statuses.map(s=>{
+      const cnt = orders.filter(o=>o.status===s).length;
+      const pct = orders.length ? Math.round(cnt/orders.length*100) : 0;
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--silver)">
+          <span style="width:12px;height:12px;border-radius:50%;background:${statusColors[s]};flex-shrink:0"></span>
+          <span style="flex:1;font-size:13px">${statusLabels[s]}</span>
+          <span style="font-size:13px;font-weight:700">${cnt}</span>
+          <span style="font-size:12px;color:var(--fg3);min-width:35px;text-align:left">${pct}%</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Recent orders table ──
+  renderOrdersTable('recentOrdersTable', orders.slice(0,8));
+
+  // Store for export
+  window._dashOrders = orders;
+  window._dashItems  = items;
+}
+
+function drawSalesChart(labels, values){
+  const canvas = document.getElementById('salesChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 400;
+  canvas.width  = W;
+  canvas.height = 180;
+  const H = 180;
+  const pad = {top:20,right:16,bottom:42,left:56};
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top  - pad.bottom;
+
+  ctx.clearRect(0,0,W,H);
+
+  const maxVal = Math.max(...values, 1);
+  const barW   = Math.floor(cW / values.length * 0.55);
+  const gap    = cW / values.length;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,0,0,.07)';
+  ctx.lineWidth = 1;
+  const gridLines = 4;
+  for(let i=0;i<=gridLines;i++){
+    const y = pad.top + cH - (cH * i / gridLines);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+cW,y); ctx.stroke();
+    ctx.fillStyle='#8890a0';
+    ctx.font='11px Tajawal,sans-serif';
+    ctx.textAlign='right';
+    const lbl = Math.round(maxVal*i/gridLines);
+    ctx.fillText(lbl>999?`${(lbl/1000).toFixed(1)}k`:lbl, pad.left-6, y+4);
+  }
+
+  // Bars
+  values.forEach((v,i)=>{
+    const x = pad.left + gap*i + gap/2 - barW/2;
+    const h = v>0 ? Math.max(4, Math.floor(cH * v/maxVal)) : 0;
+    const y = pad.top + cH - h;
+    const grad = ctx.createLinearGradient(0,y,0,y+h);
+    grad.addColorStop(0,'#00D4E8');
+    grad.addColorStop(1,'rgba(0,212,232,.3)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x,y,barW,h,4);
+    ctx.fill();
+    // Label
+    if(v>0){
+      ctx.fillStyle='#2e3340';
+      ctx.font='bold 10px Tajawal,sans-serif';
+      ctx.textAlign='center';
+      const lbl2 = v>=1000?`${(v/1000).toFixed(1)}k`:Math.round(v);
+      ctx.fillText(lbl2, x+barW/2, y-5);
+    }
+    // Day label
+    ctx.fillStyle='#8890a0';
+    ctx.font='10px Tajawal,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(labels[i], x+barW/2, H-pad.bottom+14);
+  });
+}
+
+function exportSalesExcel(){
+  const isAr = currentLang==='ar';
+  const orders = window._dashOrders || [];
+  const items  = window._dashItems  || [];
+  if(!orders.length){ toast(isAr?'لا توجد بيانات للتصدير':'No data to export'); return; }
+
+  const bom = '﻿';
+  const now = new Date();
+  const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const escCSV = v => { const s=String(v??''); return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:`${s}`; };
+  const fmt2 = n => parseFloat(n||0).toFixed(2);
+
+  const validOrders = orders.filter(o=>o.status!=='cancelled');
+  const totalRevenue = validOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const todaySales = orders.filter(o=>o.status!=='cancelled'&&new Date(o.created_at).toDateString()===now.toDateString()).reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const deliveredCount = orders.filter(o=>o.status==='delivered').length;
+  const avgOrder = validOrders.length ? totalRevenue/validOrders.length : 0;
+
+  // Summary section
+  const summaryRows = isAr ? [
+    ['📊 تقرير المبيعات — حرير', '', stamp],
+    [],
+    ['ملخص عام','',''],
+    ['إجمالي الطلبات', orders.length, ''],
+    ['الطلبات المكتملة', validOrders.length, ''],
+    ['مبيعات اليوم (ج.م)', fmt2(todaySales), ''],
+    ['إجمالي الإيرادات (ج.م)', fmt2(totalRevenue), ''],
+    ['متوسط قيمة الطلب (ج.م)', fmt2(avgOrder), ''],
+    ['تم التسليم', deliveredCount, ''],
+    [],
+    ['تفاصيل الطلبات','','','','','','',''],
+    ['رقم الطلب','اسم العميل','الهاتف','المحافظة','المنطقة','الإجمالي (ج.م)','الحالة','التاريخ'],
+  ] : [
+    ['📊 Sales Report — Harir', '', stamp],
+    [],
+    ['Summary','',''],
+    ['Total Orders', orders.length, ''],
+    ['Valid Orders', validOrders.length, ''],
+    ["Today's Sales (EGP)", fmt2(todaySales), ''],
+    ['Total Revenue (EGP)', fmt2(totalRevenue), ''],
+    ['Avg Order Value (EGP)', fmt2(avgOrder), ''],
+    ['Delivered', deliveredCount, ''],
+    [],
+    ['Order Details','','','','','','',''],
+    ['Order #','Customer','Phone','Governorate','District','Total (EGP)','Status','Date'],
+  ];
+
+  const statusLabelsAr = {pending:'في الانتظار',confirmed:'مؤكد',shipped:'جاري التوصيل',delivered:'تم التسليم',cancelled:'ملغي'};
+
+  const orderRows = orders.map(o=>[
+    o.order_number||'',
+    o.customer_name||'',
+    o.customer_phone||'',
+    o.customer_governorate||'',
+    o.customer_district||'',
+    fmt2(o.total),
+    isAr ? (statusLabelsAr[o.status]||o.status) : (o.status||''),
+    new Date(o.created_at).toLocaleDateString('en-GB'),
+  ]);
+
+  const allRows = [...summaryRows, ...orderRows];
+  const csv = bom + allRows.map(r=>r.map(escCSV).join(',')).join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`harir-sales-report-${stamp}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast(isAr?`✅ تم تصدير تقرير المبيعات`:`✅ Sales report exported`);
 }
 
 async function loadOrders(){
