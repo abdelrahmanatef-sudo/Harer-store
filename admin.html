@@ -719,7 +719,7 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if(error){ document.getElementById('loginErr').textContent = 'بيانات خاطئة!'; return; }
+  if(error){ document.getElementById('loginErr').textContent = t('loginErr'); return; }
   showAdmin(data.user); loadAll();
 });
 
@@ -1415,7 +1415,7 @@ async function updateStatus(orderId, status, btn){
     if(badgeCell) badgeCell.innerHTML = statusBadge(status);
   }
   const { error } = await sb.from('orders').update({ status }).eq('id', orderId);
-  if(error){ toast('❌ فشل التحديث'); loadOrders(); }
+  if(error){ toast(t('errUpdate')); loadOrders(); }
   else{
     toast(t('toastUpdated', getStatusLabels()[status]));
     // update local array
@@ -1438,7 +1438,7 @@ async function deleteProduct(id){
 async function editProduct(id){
   // fetch fresh from allProds cache
   const p = allProds.find(x=>String(x.id)===String(id));
-  if(!p){ toast('❌ لم يتم العثور على المنتج'); return; }
+  if(!p){ toast(t('errNotFound')); return; }
   currentEditId = String(id);
 
   // fill category select FIRST (rebuild it)
@@ -1497,12 +1497,12 @@ async function saveEditProduct(){
   const id    = currentEditId;
   const name  = document.getElementById('editName').value.trim();
   const price = parseFloat(document.getElementById('editPrice').value);
-  if(!id)          { toast('❌ خطأ: لا يوجد منتج محدد'); return; }
+  if(!id)          { toast(t('errNoSel')); return; }
   if(!name||!price){ toast(t('errFields')); return; }
 
   const btn = document.getElementById('saveEditProduct');
   btn.disabled = true;
-  btn.textContent = currentLang==='ar' ? '⏳ جاري الحفظ...' : '⏳ Saving...';
+  btn.textContent = t('saving');
 
   const { error } = await sb.from('products').update({
     name,
@@ -1667,6 +1667,27 @@ const T = {
     lastUpdated: t=>'آخر تحديث: '+t,
     langFlag:'🇬🇧', langLabel:'EN',
     catPlaceholder:'اختر...',
+    statToday:   'مبيعات النهارده',
+    statMonth:   'مبيعات الشهر',
+    statAvg:     'متوسط قيمة الأوردر',
+    statDel:     'تم التسليم',
+    chart7:      '📈 المبيعات (آخر 7 أيام)',
+    topProds:    '🏆 أكتر المنتجات مبيعاً',
+    topRegions:  '📍 أكتر المناطق طلباً',
+    statusBreak: '📊 توزيع الحالات',
+    exportOrders:'📊 تصدير Excel',
+    editLblName: 'اسم المنتج *',
+    editLblBrand:'الماركة',
+    editLblPrice:'السعر (ج.م) *',
+    editLblOld:  'السعر القديم',
+    editLblCat:  'الفئة',
+    editLblStock:'المخزون',
+    editLblImg:  'رابط الصورة',
+    editUpload:  '📤 رفع',
+    editLblDesc: 'الوصف',
+    errNotFound: '❌ لم يتم العثور على المنتج',
+    errNoSel:    '❌ خطأ: لا يوجد منتج محدد',
+    saving:      '⏳ جاري الحفظ...',
   },
   en: {
     pageTitle:   { dashboard:'Dashboard', orders:'Orders', products:'Products', 'add-product':'New Product' },
@@ -1746,6 +1767,27 @@ const T = {
     lastUpdated: t=>'Last updated: '+t,
     langFlag:'🇸🇦', langLabel:'AR',
     catPlaceholder:'Choose...',
+    statToday:   "Today's Sales",
+    statMonth:   'This Month',
+    statAvg:     'Avg Order Value',
+    statDel:     'Delivered',
+    chart7:      '📈 Sales (Last 7 Days)',
+    topProds:    '🏆 Top Selling Products',
+    topRegions:  '📍 Top Regions',
+    statusBreak: '📊 Status Breakdown',
+    exportOrders:'📊 Export Excel',
+    editLblName: 'Product Name *',
+    editLblBrand:'Brand',
+    editLblPrice:'Price (EGP) *',
+    editLblOld:  'Old Price',
+    editLblCat:  'Category',
+    editLblStock:'Stock',
+    editLblImg:  'Image URL',
+    editUpload:  '📤 Upload',
+    editLblDesc: 'Description',
+    errNotFound: '❌ Product not found',
+    errNoSel:    '❌ Error: No product selected',
+    saving:      '⏳ Saving...',
   }
 };
 
@@ -1796,10 +1838,21 @@ function applyAdminLang(){
   const pageTitle = document.getElementById('pageTitle');
   if(pageTitle) pageTitle.textContent = t('pageTitle')[currentTab] || '';
 
-  // stats labels
-  const statLabels = document.querySelectorAll('.stat-card .label');
-  const statKeys = ['statOrders','statPending','statRevenue','statProds'];
-  statLabels.forEach((el,i)=>{ if(statKeys[i]) el.textContent = t(statKeys[i]); });
+  // stats labels — row 1
+  const s1 = document.getElementById('lbl-sOrders');  if(s1) s1.textContent = t('statOrders');
+  const s2 = document.getElementById('lbl-sPending'); if(s2) s2.textContent = t('statPending');
+  const s3 = document.getElementById('lbl-sRevenue'); if(s3) s3.textContent = t('statRevenue');
+  const s4 = document.getElementById('lbl-sProducts');if(s4) s4.textContent = t('statProds');
+  // stats labels — row 2
+  const s5 = document.getElementById('lbl-sToday');   if(s5) s5.textContent = t('statToday');
+  const s6 = document.getElementById('lbl-sMonth');   if(s6) s6.textContent = t('statMonth');
+  const s7 = document.getElementById('lbl-sAvg');     if(s7) s7.textContent = t('statAvg');
+  const s8 = document.getElementById('lbl-sDelivered');if(s8) s8.textContent = t('statDel');
+  // dashboard section headings
+  const ch7 = document.getElementById('lbl-chart7');      if(ch7) ch7.textContent = t('chart7');
+  const tp  = document.getElementById('lbl-topProds');    if(tp)  tp.textContent  = t('topProds');
+  const tr2 = document.getElementById('lbl-topRegions');  if(tr2) tr2.textContent = t('topRegions');
+  const sb2 = document.getElementById('lbl-statusBreak'); if(sb2) sb2.textContent = t('statusBreak');
 
   // recent orders title
   const recentTitle = document.querySelector('#tab-dashboard .table-head h3');
@@ -1822,6 +1875,9 @@ function applyAdminLang(){
     if(count) btn.appendChild(count);
   });
 
+  // export orders button
+  const expBtn = document.getElementById('exportOrdersBtn');
+  if(expBtn) expBtn.innerHTML = t('exportOrders');
   // live bar
   const liveSpan = document.querySelector('.live-bar span:nth-child(2)');
   if(liveSpan) liveSpan.textContent = t('liveAuto');
@@ -1886,6 +1942,15 @@ function applyAdminLang(){
   fstockOpts.forEach((o,i)=>{ o.textContent = lang==='ar' ? stockLabelsAr[i] : stockLabelsEn[i]; });
   const resetProdBtn = document.querySelector('#prodFilterRow .reset-filters-btn');
   if(resetProdBtn) resetProdBtn.textContent = lang==='ar' ? '✕ إعادة تعيين' : '✕ Reset';
+
+  // edit modal labels
+  const em = {
+    editLblName:'editLblName', editLblBrand:'editLblBrand', editLblPrice:'editLblPrice',
+    editLblOld:'editLblOld', editLblCat:'editLblCat', editLblStock:'editLblStock',
+    editLblImg:'editLblImg', editLblDesc:'editLblDesc'
+  };
+  Object.entries(em).forEach(([id,key])=>{ const el=document.getElementById(id); if(el) el.textContent=t(key); });
+  const euBtn = document.getElementById('editUploadBtn'); if(euBtn) euBtn.textContent = t('editUpload');
 
   // re-render tables to update column headers & labels
   renderOrdersTable('recentOrdersTable', allOrders.slice(0,8));
