@@ -57,15 +57,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-/* ══════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════ */
+/* ===== TOKENS الجديدة البروفيشنال ===== */
 :root{
-  --cyan:#00D4E8; --cyan-dk:#00b8c9; --cyan-lt:#e0f9fc;
-  --silver:#C0C8D0; --silver-dk:#a8b2bb;
+  --cyan:#00D4E8; --cyan-dk:#00b8c9; --cyan-glow:rgba(0,212,232,.4);
   --bg:#F5F7FA; --card:#fff;
-  --fg:#2e3340; --fg2:#4A4A5A; --fg3:#8890a0;
-  --radius:14px; --shadow:0 4px 20px rgba(0,0,0,.08);
+  --fg:#1a2030; --fg2:#4A4A5A; --fg3:#8890a0;
+  --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.08);
+  --shadow-3d:0 20px 40px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.06);
   --transition:.25s ease;
 }
 @media(prefers-color-scheme:dark){:root{
@@ -90,8 +88,10 @@ input,textarea,select{font-family:inherit}
    HEADER
 ══════════════════════════════════════════ */
 header{
-  background:var(--card);
-  box-shadow:0 2px 10px rgba(0,0,0,.06);
+  background:rgba(255,255,255,.8);
+  backdrop-filter:blur(16px) saturate(180%);
+  -webkit-backdrop-filter:blur(16px) saturate(180%);
+  border-bottom:1px solid rgba(0,0,0,.06);
   position:sticky;top:0;z-index:100;
 }
 .header-inner{
@@ -160,13 +160,16 @@ header{
    HERO
 ══════════════════════════════════════════ */
 .hero{
-  background:linear-gradient(135deg,#0a2a30 0%,#1a4a52 50%,#0d3038 100%);
-  padding:70px 0;overflow:hidden;position:relative;
+  background:radial-gradient(ellipse at 30% 20%, rgba(0,212,232,.25) 0%, transparent 50%),
+             linear-gradient(135deg,#061a1e 0%,#0a2a30 40%,#0d3a44 100%);
+  padding:70px 0 80px;position:relative;overflow:hidden;
 }
 .hero::before{
   content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 30% 50%, rgba(0,212,232,.15) 0%, transparent 60%);
 }
+.hero::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle, rgba(0,212,232,.15) 0%, transparent 70%);top:-200px;left:-100px;filter:blur(40px);animation:floatOrb 6s ease-in-out infinite}
+@keyframes floatOrb{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,30px)}}
 .hero-content{position:relative;z-index:1;max-width:560px}
 .hero-tag{
   display:inline-block;
@@ -187,10 +190,10 @@ header{
   padding:13px 28px;border-radius:30px;
   font-size:15px;font-weight:700;transition:all var(--transition);
 }
-.btn-primary{background:var(--cyan);color:#0a2a30}
-.btn-primary:hover{background:var(--cyan-dk);transform:translateY(-2px)}
-.btn-ghost{border:2px solid rgba(255,255,255,.3);color:#fff}
-.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-primary{background:var(--cyan);color:#061a1e;box-shadow:0 10px 30px var(--cyan-glow)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 15px 40px var(--cyan-glow)}
+.btn-ghost{border:1.5px solid rgba(255,255,255,.25);color:#fff;backdrop-filter:blur(10px)}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:var(--cyan)}
 
 /* ══════════════════════════════════════════
    CATEGORIES BAR
@@ -200,12 +203,14 @@ header{
   display:flex;gap:10px;flex-wrap:wrap;align-items:center;
 }
 .cat-pill{
-  padding:9px 20px;border-radius:30px;font-size:14px;font-weight:600;
-  border:2px solid var(--silver);color:var(--fg2);
+  padding:10px 22px;border-radius:30px;font-size:14px;font-weight:700;
+  border:1.5px solid #e2e8f0;color:var(--fg2);
   transition:all var(--transition);white-space:nowrap;
+  background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 .cat-pill:hover,.cat-pill.active{
-  background:var(--cyan);border-color:var(--cyan);color:#0a2a30;
+  background:var(--cyan);border-color:var(--cyan);color:#061a1e;
+  transform:translateY(-2px);box-shadow:0 8px 20px var(--cyan-glow);
 }
 .cat-pill .em{margin-inline-end:6px}
 
@@ -236,37 +241,37 @@ header{
 
 /* product card */
 .card{
-  background:var(--card);border-radius:var(--radius);
-  box-shadow:var(--shadow);overflow:hidden;
-  transition:transform var(--transition),box-shadow var(--transition);
-  display:flex;flex-direction:column;
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  overflow:hidden;transform-style:preserve-3d;
+  transition:transform .15s ease, box-shadow .3s ease;
+  will-change:transform;display:flex;flex-direction:column;
 }
-.card:hover{transform:translateY(-5px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+.card:hover{box-shadow:var(--shadow-3d)}
 .card-img{
-  position:relative;height:200px;overflow:hidden;background:var(--bg);
+  position:relative;height:220px;overflow:hidden;background:#f1f5f9;
 }
 .card-img img{
   width:100%;height:100%;object-fit:cover;
-  transition:transform .4s ease;
+  transition:transform .5s ease;
 }
-.card:hover .card-img img{transform:scale(1.06)}
+.card:hover .card-img img{transform:scale(1.08)}
 .badge{
-  position:absolute;top:10px;right:10px;
-  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  position:absolute;top:12px;right:12px;
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;
 }
-.badge-sale{background:#ff4757;color:#fff}
-.badge-new{background:var(--cyan);color:#0a2a30}
+.badge-sale{background:#ff4757;color:#fff;box-shadow:0 4px 12px rgba(255,71,87,.4)}
+.badge-new{background:var(--cyan);color:#061a1e}
 .card-body{padding:16px;flex:1;display:flex;flex-direction:column}
 .card-brand{
-  font-size:11px;font-weight:700;text-transform:uppercase;
+  font-size:11px;font-weight:800;
   color:var(--cyan);letter-spacing:.5px;margin-bottom:4px;
 }
 .card-name{
-  font-weight:700;font-size:15px;margin-bottom:8px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-weight:700;font-size:15px;margin-bottom:10px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:44px;
 }
 .card-price{display:flex;align-items:baseline;gap:8px;margin-top:auto;margin-bottom:14px}
-.price-new{font-family:'Cairo',sans-serif;font-size:20px;font-weight:900;color:var(--cyan)}
+.price-new{font-family:'Cairo',sans-serif;font-size:20px;font-weight:900;color:#0a2a30}
 .price-old{font-size:13px;color:var(--fg3);text-decoration:line-through}
 .card-footer{display:flex;gap:8px}
 .add-btn{
