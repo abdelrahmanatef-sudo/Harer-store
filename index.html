@@ -458,11 +458,12 @@ footer{
 
 /* ══ RESPONSIVE ══ */
 @media(max-width:640px){
-  .hero{padding:48px 0}
-  .form-row{grid-template-columns:1fr}
-  .header-inner{flex-wrap:wrap}
-  .search-wrap{order:3;flex-basis:100%}
-}
+/* لمسة بروفيشنال - هيدر زجاجي وكروت 3D خفيفة */
+header{ background:rgba(255,255,255,.85) !important; backdrop-filter:blur(16px) saturate(180%); }
+.hero{ background:radial-gradient(ellipse at 30% 20%, rgba(0,212,232,.18) 0%, transparent 50%), linear-gradient(135deg,#061a1e 0%, #0a2a30 50%, #0e3d47 100%) !important; }
+.card{ border-radius:18px !important; transition:transform .2s ease, box-shadow .3s ease !important; }
+.card:hover{ transform:translateY(-6px) !important; box-shadow:0 20px 40px rgba(0,0,0,.12) !important; }
+.btn-primary{ box-shadow:0 8px 20px rgba(0,212,232,.35) !important; }
 </style>
 </head>
 <body>
