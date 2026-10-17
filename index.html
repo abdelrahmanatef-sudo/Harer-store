@@ -18,13 +18,18 @@
 <meta property="og:url" content="https://harer-store.vercel.app/">
 <meta property="og:title" content="حرير — اكسسوارات الموبايل الأصلية">
 <meta property="og:description" content="شواحن وكابلات وسماعات أصلية من Anker وApple وSamsung. توصيل لجميع محافظات مصر.">
+<meta property="og:image" content="https://harer-store.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
 <meta property="og:locale" content="ar_EG">
 <meta property="og:site_name" content="حرير">
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="حرير — اكسسوارات الموبايل الأصلية">
 <meta name="twitter:description" content="شواحن وكابلات وسماعات أصلية. توصيل لجميع محافظات مصر.">
+<meta name="twitter:image" content="https://harer-store.vercel.app/og-image.png">
 
 <!-- Structured Data (Google Rich Results) -->
 <script type="application/ld+json">
@@ -40,9 +45,16 @@
   "paymentAccepted": "Cash on Delivery",
   "priceRange": "$$",
   "hasMap": "https://maps.google.com/?q=Egypt",
+  "telephone": "+201145000451",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "EG",
+    "addressLocality": "القاهرة الكبرى"
+  },
   "sameAs": [],
   "contactPoint": {
     "@type": "ContactPoint",
+    "telephone": "+201145000451",
     "contactType": "customer service",
     "availableLanguage": "Arabic"
   }
@@ -457,13 +469,23 @@ footer{
 [lang="en"] h1,[lang="en"] h2,[lang="en"] h3,[lang="en"] h4{font-family:'Inter',sans-serif}
 
 /* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  .grid{ grid-template-columns:repeat(2,1fr); gap:14px; }
+  .hero{ padding:50px 0 60px; }
+  .hero h1{ font-size:clamp(26px,6vw,38px); }
+  .hero-btns{ flex-direction:column; gap:10px; }
+  .btn{ width:100%; justify-content:center; }
+  .cats-row{ gap:8px; }
+  .cat-pill{ padding:8px 16px; font-size:13px; }
+  .footer-grid{ grid-template-columns:1fr 1fr; gap:20px; }
+}
 @media(max-width:640px){
-/* لمسة بروفيشنال - هيدر زجاجي وكروت 3D خفيفة */
-header{ background:rgba(255,255,255,.85) !important; backdrop-filter:blur(16px) saturate(180%); }
-.hero{ background:radial-gradient(ellipse at 30% 20%, rgba(0,212,232,.18) 0%, transparent 50%), linear-gradient(135deg,#061a1e 0%, #0a2a30 50%, #0e3d47 100%) !important; }
-.card{ border-radius:18px !important; transition:transform .2s ease, box-shadow .3s ease !important; }
-.card:hover{ transform:translateY(-6px) !important; box-shadow:0 20px 40px rgba(0,0,0,.12) !important; }
-.btn-primary{ box-shadow:0 8px 20px rgba(0,212,232,.35) !important; }
+  .grid{ grid-template-columns:1fr; }
+  .header-inner{ gap:10px; }
+  .search-wrap{ max-width:none; flex:1; }
+  .hero{ padding:40px 0 50px; }
+  .section-head{ flex-direction:column; gap:8px; }
+}
 </style>
 </head>
 <body>
@@ -584,8 +606,9 @@ header{ background:rgba(255,255,255,.85) !important; backdrop-filter:blur(16px) 
         <h4>تواصل معنا</h4>
         <ul>
           <li><a href="https://wa.me/201145000451">📱 واتساب</a></li>
-          <li><a href="#">📘 فيسبوك</a></li>
-          <li><a href="#">📸 إنستجرام</a></li>
+          <!-- أضف رابط صفحة فيسبوك هنا لما تجهز -->
+          <!-- <li><a href="https://facebook.com/harir.store">📘 فيسبوك</a></li> -->
+          <!-- <li><a href="https://instagram.com/harir.store">📸 إنستجرام</a></li> -->
         </ul>
       </div>
     </div>
@@ -683,6 +706,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // 🛒  CART STATE
 // ════════════════════════════════
 let cart = JSON.parse(localStorage.getItem('harir_cart') || '[]');
+let wishlist = new Set(JSON.parse(localStorage.getItem('harir_wish') || '[]'));
+function saveWishlist(){ localStorage.setItem('harir_wish', JSON.stringify([...wishlist])); }
 let allProducts = [];
 let activeSlug = 'all';
 let searchQ = '';
@@ -694,7 +719,7 @@ function saveCart(){ localStorage.setItem('harir_cart',JSON.stringify(cart)) }
 // ════════════════════════════════
 async function loadCategories(){
   const { data, error } = await sb.from('categories').select('*').order('id');
-  if(error){ console.warn('cats:', error); return; }
+  if(error){ return; }
   const row = document.getElementById('catsRow');
   data.forEach(c => {
     const btn = document.createElement('button');
@@ -744,7 +769,14 @@ function renderProducts(){
     btn.addEventListener('click', () => addToCart(btn.dataset.id));
   });
   grid.querySelectorAll('.wish-btn').forEach(btn => {
-    btn.addEventListener('click', () => btn.classList.toggle('active'));
+    const pid = btn.dataset.id;
+    if(wishlist.has(String(pid))) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      const sid = String(pid);
+      if(wishlist.has(sid)){ wishlist.delete(sid); btn.classList.remove('active'); }
+      else { wishlist.add(sid); btn.classList.add('active'); }
+      saveWishlist();
+    });
   });
 }
 
@@ -766,7 +798,7 @@ function productCard(p){
       <div class="card-footer">
         <button class="add-btn" data-id="${p.id}" data-name="${p.name}"
           data-price="${p.price}" data-img="${p.image_url||''}">${t('addToCart')}</button>
-        <button class="wish-btn" aria-label="المفضلة">♡</button>
+        <button class="wish-btn" data-id="${p.id}" aria-label="المفضلة">♡</button>
       </div>
     </div>
   </article>`;
@@ -790,18 +822,19 @@ document.getElementById('searchInput').addEventListener('input', e => {
 // 🛒  CART LOGIC
 // ════════════════════════════════
 function addToCart(id){
-  const p = allProducts.find(x=>x.id===id);
+  const sid = String(id);
+  const p = allProducts.find(x=>String(x.id)===sid);
   if(!p) return;
-  const item = cart.find(i=>i.id===id);
+  const item = cart.find(i=>String(i.id)===sid);
   if(item) item.qty++;
-  else cart.push({ id:p.id, name:p.name, price:p.price, image_url:p.image_url, qty:1 });
+  else cart.push({ id:String(p.id), name:p.name, price:p.price, image_url:p.image_url, qty:1 });
   saveCart(); updateCartUI(); toast(t('toastAdded'));
 }
 
-function removeItem(id){ cart = cart.filter(i=>i.id!==id); saveCart(); updateCartUI(); }
+function removeItem(id){ const sid=String(id); cart = cart.filter(i=>String(i.id)!==sid); saveCart(); updateCartUI(); }
 
 function changeQty(id, delta){
-  const item = cart.find(i=>i.id===id);
+  const item = cart.find(i=>String(i.id)===String(id));
   if(!item) return;
   item.qty += delta;
   if(item.qty < 1) return removeItem(id);

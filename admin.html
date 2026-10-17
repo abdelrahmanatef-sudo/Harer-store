@@ -10,7 +10,7 @@
 <style>
 :root{
   --cyan:#00D4E8;--cyan-dk:#00b8c9;
-  --bg:#F5F7FA;--card:#fff;
+  --bg:#F5F7FA;--bg2:#eef0f5;--card:#fff;
   --fg:#2e3340;--fg2:#4A4A5A;--fg3:#8890a0;
   --silver:#C0C8D0;
   --radius:12px;--shadow:0 4px 20px rgba(0,0,0,.08);
@@ -720,6 +720,13 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const pass  = document.getElementById('loginPass').value;
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if(error){ document.getElementById('loginErr').textContent = t('loginErr'); return; }
+  // تحقق إن الإيميل هو الأدمن الحقيقي
+  const ADMIN_EMAIL = 'abdelrahmanatefdiab@gmail.com';
+  if(data.user.email !== ADMIN_EMAIL){
+    await sb.auth.signOut();
+    document.getElementById('loginErr').textContent = t('loginErr');
+    return;
+  }
   showAdmin(data.user); loadAll();
 });
 
@@ -1518,7 +1525,7 @@ async function saveEditProduct(){
   btn.disabled = false;
   btn.textContent = t('editSaveBtn');
 
-  if(error){ toast(t('errEdit')); console.error('Edit error:', error); }
+  if(error){ toast(t('errEdit')); }
   else { toast(t('toastEdited')); closeEditModal(); loadProducts(); }
 }
 
@@ -1557,7 +1564,7 @@ document.getElementById('saveProduct').addEventListener('click', async ()=>{
     image_url: document.getElementById('pImg').value||null,
     description: document.getElementById('pDesc').value||null,
   });
-  if(error){ toast(t('errSave')); console.error(error); }
+  if(error){ toast(t('errSave')); }
   else { toast(t('toastSaved')); loadProducts(); }
 });
 
