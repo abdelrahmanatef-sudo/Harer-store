@@ -346,6 +346,33 @@ tr:hover td{background:var(--bg)}
 .login-btn{background:var(--nm-bg);color:#0090a0;border-radius:16px;padding:14px;box-shadow:8px 8px 18px var(--nm-lo),-8px -8px 18px var(--nm-hi)}
 .login-btn:hover{background:var(--nm-bg);box-shadow:5px 5px 12px var(--nm-lo),-5px -5px 12px var(--nm-hi)}
 .login-btn:active{box-shadow:inset 5px 5px 10px var(--nm-lo),inset -5px -5px 10px var(--nm-hi)}
+
+/* ═════ Harir admin 2.0 polish ═════ */
+:root{--line:rgba(46,51,64,.08);--ring:rgba(0,212,232,.28);--shadow:0 6px 24px -8px rgba(10,42,48,.16)}
+body{-webkit-font-smoothing:antialiased}
+.sidebar{background:radial-gradient(400px 300px at 100% 0%,rgba(0,212,232,.18),transparent 65%),linear-gradient(180deg,#071c20,#0b2f36);padding:26px 14px}
+.sidebar-logo{padding:0 8px 22px}
+.nav-item,.sidebar a,.sidebar button{border-radius:14px}
+.nav-item{margin:2px 0;transition:all .2s ease}
+.nav-item.active,.nav-item:hover{background:linear-gradient(90deg,rgba(0,212,232,.22),rgba(0,212,232,.04));border-right-color:transparent}
+.stat-card{border-radius:20px;border:1px solid var(--line);padding:22px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease}
+.stat-card::after{content:'';position:absolute;inset-inline-end:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,232,.22),transparent 70%)}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 16px 36px -12px rgba(10,42,48,.25)}
+.stat-card .value{background:linear-gradient(135deg,#00b8c9,#5B8DEF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:30px}
+.table-wrap{border-radius:22px;border:1px solid var(--line)}
+.table-head{border-bottom:1px solid var(--line);padding:18px 22px}
+th{background:var(--bg);font-weight:700;letter-spacing:.3px}
+tbody tr{transition:background .15s ease}
+tbody tr:hover{background:rgba(0,212,232,.06)}
+td{border-bottom:1px solid var(--line)}
+.search-input{border:0;border-radius:14px;padding:11px 16px;box-shadow:inset 3px 3px 7px rgba(0,0,0,.07),inset -3px -3px 7px rgba(255,255,255,.7)}
+.search-input:focus{box-shadow:inset 3px 3px 7px rgba(0,0,0,.07),0 0 0 3px var(--ring)}
+.status{border-radius:20px;padding:4px 12px;font-weight:700}
+.action-btn,.status-btns button{border-radius:10px}
+.login-btn{border-radius:14px;background:linear-gradient(135deg,#00D4E8,#00b8c9);box-shadow:0 12px 26px -8px rgba(0,212,232,.7)}
+.login-box .logo{background:linear-gradient(90deg,#00D4E8,#5B8DEF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
