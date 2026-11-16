@@ -331,6 +331,21 @@ tr:hover td{background:var(--bg)}
   .action-row{flex-direction:column;gap:4px}
   .action-btn{font-size:12px;padding:5px 10px;width:100%}
 }
+
+/* soft (neumorphic) login */
+.login-wrap{--nm-bg:#E7ECF3;--nm-hi:#fff;--nm-lo:#C5CEDB;background:var(--nm-bg);position:relative;overflow:hidden;padding:20px}
+.login-wrap::before,.login-wrap::after{content:"";position:absolute;border-radius:50%;background:var(--nm-bg);box-shadow:14px 14px 30px var(--nm-lo),-14px -14px 30px var(--nm-hi);pointer-events:none}
+.login-wrap::before{width:240px;height:240px;top:7%;left:7%}
+.login-wrap::after{width:200px;height:200px;bottom:7%;right:8%}
+.login-box{position:relative;z-index:1;background:var(--nm-bg);border-radius:32px;padding:44px 32px 32px;width:min(380px,100%);box-shadow:16px 16px 36px var(--nm-lo),-16px -16px 36px var(--nm-hi)}
+.login-box>div:first-child{flex-direction:column;gap:10px!important}
+.login-box>div:first-child>div:first-child{width:76px!important;height:76px!important;border-radius:50%!important;background:var(--nm-bg)!important;box-shadow:8px 8px 18px var(--nm-lo),-8px -8px 18px var(--nm-hi)!important;font-size:30px!important}
+.login-box .form-group label{font-size:12px;color:var(--fg3);padding:0 6px}
+.login-box .form-group input{background:var(--nm-bg);border:0;border-radius:16px;padding:14px 16px;box-shadow:inset 6px 6px 12px var(--nm-lo),inset -6px -6px 12px var(--nm-hi)}
+.login-box .form-group input:focus{box-shadow:inset 6px 6px 12px var(--nm-lo),inset -6px -6px 12px var(--nm-hi),0 0 0 2px var(--cyan)}
+.login-btn{background:var(--nm-bg);color:#0090a0;border-radius:16px;padding:14px;box-shadow:8px 8px 18px var(--nm-lo),-8px -8px 18px var(--nm-hi)}
+.login-btn:hover{background:var(--nm-bg);box-shadow:5px 5px 12px var(--nm-lo),-5px -5px 12px var(--nm-hi)}
+.login-btn:active{box-shadow:inset 5px 5px 10px var(--nm-lo),inset -5px -5px 10px var(--nm-hi)}
 </style>
 </head>
 <body>

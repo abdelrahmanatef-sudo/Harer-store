@@ -492,6 +492,15 @@ footer{
   .hero{ padding:40px 0 50px; }
   .section-head{ flex-direction:column; gap:8px; }
 }
+
+/* soft (neumorphic) checkout */
+.modal-overlay{--nm-bg:#E7ECF3;--nm-hi:#fff;--nm-lo:#C5CEDB;background:rgba(231,236,243,.94);backdrop-filter:blur(4px)}
+.modal{background:var(--nm-bg);border-radius:28px;padding:32px 28px;box-shadow:14px 14px 32px var(--nm-lo),-14px -14px 32px var(--nm-hi)}
+.modal .form-group input,.modal .form-group textarea,.modal .form-group select{background:var(--nm-bg);border:0;border-radius:14px;padding:13px 15px;box-shadow:inset 5px 5px 10px var(--nm-lo),inset -5px -5px 10px var(--nm-hi)}
+.modal .form-group input:focus,.modal .form-group textarea:focus,.modal .form-group select:focus{box-shadow:inset 5px 5px 10px var(--nm-lo),inset -5px -5px 10px var(--nm-hi),0 0 0 2px var(--cyan)}
+.modal .btn-outline{background:var(--nm-bg);border:0;border-radius:14px;box-shadow:6px 6px 14px var(--nm-lo),-6px -6px 14px var(--nm-hi)}
+.modal .btn-primary{border-radius:14px;box-shadow:6px 6px 14px var(--nm-lo),-6px -6px 14px var(--nm-hi)}
+.modal .btn-outline:active,.modal .btn-primary:active{box-shadow:inset 4px 4px 9px var(--nm-lo),inset -4px -4px 9px var(--nm-hi)}
 </style>
 </head>
 <body>
