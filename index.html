@@ -69,7 +69,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="حرير">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=Rubik:wght@400;500;600;700&family=Inter:wght@400;500;600;700;900&display=swap">
 
 <!-- ══ Supabase SDK ══ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -94,7 +94,7 @@
 /* ══ RESET ══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--fg);line-height:1.6}
+body{font-family:'Rubik',sans-serif;background:var(--bg);color:var(--fg);line-height:1.6}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;display:block}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
@@ -131,7 +131,7 @@ header{
   line-height:1;
 }
 .logo-text .logo-ar{
-  font-family:'Cairo',sans-serif;
+  font-family:'Alexandria',sans-serif;
   font-size:26px;font-weight:900;
   background:linear-gradient(135deg,var(--cyan) 0%,#0099aa 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
@@ -193,7 +193,7 @@ header{
   margin-bottom:18px;
 }
 .hero h1{
-  font-family:'Cairo',sans-serif;
+  font-family:'Alexandria',sans-serif;
   font-size:clamp(32px,5vw,52px);font-weight:900;
   color:#fff;line-height:1.2;margin-bottom:16px;
 }
@@ -232,7 +232,7 @@ header{
 ══════════════════════════════════════════ */
 .products{padding:24px 0 60px}
 .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:24px}
-.section-head h2{font-family:'Cairo',sans-serif;font-size:22px;font-weight:700}
+.section-head h2{font-family:'Alexandria',sans-serif;font-size:22px;font-weight:700}
 .section-head .count{color:var(--fg3);font-size:14px}
 
 .grid{
@@ -284,7 +284,7 @@ header{
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .card-price{display:flex;align-items:baseline;gap:8px;margin-top:auto;margin-bottom:14px}
-.price-new{font-family:'Cairo',sans-serif;font-size:20px;font-weight:900;color:var(--cyan)}
+.price-new{font-family:'Alexandria',sans-serif;font-size:20px;font-weight:900;color:var(--cyan)}
 .price-old{font-size:13px;color:var(--fg3);text-decoration:line-through}
 .card-footer{display:flex;gap:8px}
 .add-btn{
@@ -331,7 +331,7 @@ header{
   padding:20px;border-bottom:1px solid var(--silver);
   display:flex;align-items:center;justify-content:space-between;
 }
-.drawer-head h3{font-family:'Cairo',sans-serif;font-weight:700;font-size:18px}
+.drawer-head h3{font-family:'Alexandria',sans-serif;font-weight:700;font-size:18px}
 .close-btn{
   width:36px;height:36px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
@@ -395,7 +395,7 @@ header{
   padding:28px;
 }
 .modal-overlay.open .modal{transform:scale(1)}
-.modal h3{font-family:'Cairo',sans-serif;font-size:20px;font-weight:700;margin-bottom:20px}
+.modal h3{font-family:'Alexandria',sans-serif;font-size:20px;font-weight:700;margin-bottom:20px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .form-group label{font-size:13px;font-weight:600;color:var(--fg2)}
@@ -420,7 +420,7 @@ header{
 .btn-outline:hover{border-color:var(--fg2)}
 .order-success{text-align:center;padding:20px 0}
 .order-success .icon{font-size:56px;margin-bottom:12px}
-.order-success h4{font-family:'Cairo',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;color:var(--cyan)}
+.order-success h4{font-family:'Alexandria',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;color:var(--cyan)}
 
 /* ══════════════════════════════════════════
    TOAST
@@ -445,7 +445,7 @@ footer{
   gap:32px;margin-bottom:32px;
 }
 .footer-logo{
-  font-family:'Cairo',sans-serif;
+  font-family:'Alexandria',sans-serif;
   font-size:26px;font-weight:900;color:var(--cyan);margin-bottom:8px;
 }
 .footer-col h4{color:#fff;font-weight:700;margin-bottom:14px}
@@ -1272,7 +1272,7 @@ async function trackOrders(){
     ${orders.map(o => `
       <div style="background:var(--bg);border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1.5px solid var(--silver)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-weight:700;font-size:14px;font-family:'Cairo',sans-serif">${o.order_number || '—'}</span>
+          <span style="font-weight:700;font-size:14px;font-family:'Alexandria',sans-serif">${o.order_number || '—'}</span>
           <span style="font-size:12px;padding:3px 10px;border-radius:99px;background:${statusColor[o.status]}22;color:${statusColor[o.status]};font-weight:700">
             ${isAr ? (statusAr[o.status]||o.status) : (statusEn[o.status]||o.status)}
           </span>
