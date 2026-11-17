@@ -763,8 +763,8 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if(error){ document.getElementById('loginErr').textContent = t('loginErr'); return; }
   // تحقق إن الإيميل هو الأدمن الحقيقي
-  const ADMIN_EMAIL = 'abdelrahmanatefdiab@gmail.com';
-  if(data.user.email !== ADMIN_EMAIL){
+  const ADMIN_EMAILS = ['admin@harer.store','admin@harir.store','abdelrahmanatefdiab@gmail.com'];
+  if(!ADMIN_EMAILS.includes((data.user.email||'').toLowerCase())){
     await sb.auth.signOut();
     document.getElementById('loginErr').textContent = t('loginErr');
     return;
