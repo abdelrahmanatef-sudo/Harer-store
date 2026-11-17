@@ -657,6 +657,59 @@ footer{background:radial-gradient(700px 300px at 80% 0%,rgba(0,212,232,.16),tran
   .search-wrap{display:block;order:3;flex-basis:100%;max-width:none}
   .header-inner{flex-wrap:wrap}
 }
+
+/* ══ REDESIGN v2 — Bareed-grade look ══ */
+body{background:
+  radial-gradient(900px 500px at 90% -5%,rgba(0,212,232,.10),transparent 60%),
+  radial-gradient(700px 500px at -5% 30%,rgba(91,141,239,.08),transparent 60%),var(--bg);
+  background-attachment:fixed}
+header{background:var(--glass)!important;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--line)!important;box-shadow:none!important}
+.search-wrap input{border:0!important;border-radius:16px!important;background:var(--bg)!important;box-shadow:inset 4px 4px 9px rgba(0,0,0,.07),inset -4px -4px 9px rgba(255,255,255,.7)}
+@media(prefers-color-scheme:dark){.search-wrap input{box-shadow:inset 4px 4px 9px rgba(0,0,0,.4),inset -3px -3px 8px rgba(255,255,255,.03)}}
+.icon-btn,.lang-btn{border:0!important;border-radius:14px!important;background:var(--bg)!important;box-shadow:4px 4px 10px rgba(0,0,0,.08),-4px -4px 10px rgba(255,255,255,.75);transition:transform .2s,box-shadow .2s}
+@media(prefers-color-scheme:dark){.icon-btn,.lang-btn{box-shadow:4px 4px 10px rgba(0,0,0,.45),-3px -3px 8px rgba(255,255,255,.03)}}
+.icon-btn:hover,.lang-btn:hover{transform:translateY(-2px)}
+.icon-btn:active,.lang-btn:active{box-shadow:inset 3px 3px 7px rgba(0,0,0,.12)}
+
+/* hero: aurora */
+.hero{background:linear-gradient(160deg,#04161a 0%,#0a2a30 55%,#0b3a44 100%)!important;overflow:hidden;position:relative;border-radius:0 0 44px 44px}
+.hero::before{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,232,.55),transparent 65%);filter:blur(60px);top:-180px;inset-inline-end:-80px;animation:aurora 14s ease-in-out infinite;pointer-events:none}
+.hero::after{content:'';position:absolute;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(91,141,239,.5),transparent 65%);filter:blur(70px);bottom:-200px;inset-inline-start:-60px;animation:aurora 18s ease-in-out infinite reverse;pointer-events:none}
+@keyframes aurora{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,40px) scale(1.15)}}
+.hero h1{font-family:'Alexandria',sans-serif;font-weight:800;letter-spacing:-.5px;line-height:1.25}
+.hero h1 em{background:linear-gradient(90deg,#00D4E8,#9af7ff,#5B8DEF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.hero-tag{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);border-radius:999px!important}
+.hero .btn,.hero-btns .btn{border-radius:16px;padding:14px 28px;font-weight:700;transition:transform .2s,box-shadow .2s}
+.hero-btns .btn:not(.btn-ghost){background:linear-gradient(135deg,#00D4E8,#00b8c9);color:#05242a;box-shadow:0 14px 30px -10px rgba(0,212,232,.8)}
+.hero-btns .btn:hover{transform:translateY(-3px)}
+
+/* section titles & filters */
+.cat-pill{font-weight:600;transition:all .25s}
+.section-head h2{font-family:'Alexandria',sans-serif}
+
+/* product cards */
+.card{background:var(--card);overflow:hidden}
+.card-img{overflow:hidden}
+.card-img img{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.card:hover .card-img img{transform:scale(1.08)}
+.card-name{font-family:'Alexandria',sans-serif;font-weight:600}
+.price-new{font-family:'Alexandria',sans-serif;font-weight:700;background:linear-gradient(135deg,var(--fg),#00a9bb);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.badge-sale{background:linear-gradient(135deg,#ff4757,#ff7a59)!important;border-radius:999px!important}
+.add-btn{font-weight:700;letter-spacing:.2px}
+
+/* drawer + modal polish */
+.drawer{background:var(--card)}
+.drawer-head h3,.modal h3,.modal h2{font-family:'Alexandria',sans-serif;font-weight:700}
+.modal{border-radius:28px!important;box-shadow:var(--shadow-lg)!important;border:1px solid var(--line)}
+.modal-overlay{backdrop-filter:blur(6px)}
+.cart-badge{background:linear-gradient(135deg,#ff4757,#ff7a59)!important;box-shadow:0 4px 10px -2px rgba(255,71,87,.6)}
+
+/* trust cards */
+.trust-ic{background:linear-gradient(135deg,rgba(0,212,232,.22),rgba(91,141,239,.12))}
+
+/* scroll reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -1478,6 +1531,12 @@ async function trackOrders(){
     navigator.serviceWorker.register('/sw.js').catch(()=>{});
   }
 })();
+</script>
+<script>
+(function(){try{var els=document.querySelectorAll('.trust-item,.section-head,#track .container>div,.footer-col');
+if(!('IntersectionObserver' in window)){return}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+els.forEach(function(el){el.classList.add('rv');io.observe(el)});}catch(e){}})();
 </script>
 </body>
 </html>

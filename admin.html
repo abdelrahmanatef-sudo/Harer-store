@@ -373,6 +373,17 @@ td{border-bottom:1px solid var(--line)}
 .login-box .logo{background:linear-gradient(90deg,#00D4E8,#5B8DEF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
 :focus-visible{outline:3px solid var(--ring);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* admin v2 */
+body{background:radial-gradient(800px 500px at 100% -5%,rgba(0,212,232,.10),transparent 60%),radial-gradient(600px 400px at 0% 40%,rgba(91,141,239,.08),transparent 60%),var(--bg);background-attachment:fixed}
+.login-wrap{background:radial-gradient(600px 400px at 80% 10%,rgba(0,212,232,.25),transparent 60%),radial-gradient(500px 400px at 10% 90%,rgba(91,141,239,.22),transparent 60%),linear-gradient(160deg,#04161a,#0a2a30)!important}
+.login-box{border-radius:28px!important;box-shadow:0 30px 70px -20px rgba(0,0,0,.6)!important}
+.modal,.modal-box{border-radius:26px!important;box-shadow:0 30px 70px -20px rgba(0,0,0,.45)}
+.table-wrap{box-shadow:var(--shadow);background:var(--card)}
+.stat-card .label{font-weight:600}
+.stat-card,.table-wrap{animation:cardIn2 .5s both cubic-bezier(.2,.7,.2,1)}
+@keyframes cardIn2{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+h1,h2,h3,.page-title{font-family:'Alexandria',sans-serif}
 </style>
 </head>
 <body>
